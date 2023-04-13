@@ -1,5 +1,40 @@
 import SwiftUI
 
+struct GradientProgressStyle<Stroke: ShapeStyle, Background: ShapeStyle>: ProgressViewStyle {
+    var stroke: Stroke
+    var fill: Background
+    var caption: String = ""
+    var cornerRadius: CGFloat = 10
+    var height: CGFloat = 20
+    var animation: Animation = .easeInOut
+    
+    func makeBody(configuration: Configuration) -> some View {
+        let fractionCompleted = configuration.fractionCompleted ?? 0
+        
+        return VStack {
+            ZStack(alignment: .topLeading) {
+                GeometryReader { geo in
+                    Rectangle()
+                        .fill(fill)
+                        .frame(maxWidth: geo.size.width * CGFloat(fractionCompleted))
+                        .animation(animation)
+                }
+            }
+            .frame(height: height)
+            .cornerRadius(cornerRadius)
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius)
+                        .stroke(stroke, lineWidth: 2)
+            )
+            
+            if !caption.isEmpty {
+                Text("\(caption)")
+                    .font(.caption)
+            }
+        }
+    }
+}
+
 struct ContentView: View {
     private func test_getAboveIntervalNoteFrom(_ text: String, _ note: MusicNote?) {
         guard let note = note else {
@@ -11,12 +46,50 @@ struct ContentView: View {
         print(component, note.scale7, note.accidental, note.octave)
     }
     
+    static let color0 = Color(red: 255/255, green: 255/255, blue: 0/255)
+    static let color1 = Color(red: 0/255, green: 188/255, blue: 212/255)
+    static let color2 = Color(red: 238/255, green: 130/255, blue: 238/255)
+    // let gradient = Gradient(colors: [color0, color1, color2])
+    
+    @State private var gradient = LinearGradient(
+       gradient: Gradient(colors: [.green, .blue]),
+       startPoint: .top,
+       endPoint: .bottom
+   )
+    
+    @State var progress: Double = 40.0
+    
     var body: some View {
+        let gradientStyle = GradientProgressStyle(
+            stroke: gradient,
+            fill: gradient,
+            caption: "Some fancy caption"
+        )
+        
         VStack {
             Image(systemName: "globe")
                 .imageScale(.large)
                 .foregroundColor(.accentColor)
             Text("Hello, world!")
+            
+            ProgressView(value: progress, total: 100)
+                .progressViewStyle(gradientStyle)
+                
+                .foregroundStyle(LinearGradient(gradient: Gradient(colors: [.white, .black]), startPoint: .top, endPoint: .bottom))
+                // .frame(width: 100, height: 8)
+                // .scaleEffect(x: 1, y: 8, anchor: .center)
+                // .clipShape(RoundedRectangle(cornerRadius: 10))
+            Button {
+                progress += 10.0
+            } label: {
+                Text("plus")
+            }
+            
+            Button {
+                progress = 0
+            } label: {
+                Text("Reset")
+            }
         }.onAppear {
             // ******** TEST (재래식) ********
             
