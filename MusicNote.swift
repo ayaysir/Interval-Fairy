@@ -8,7 +8,6 @@
 import Foundation
 
 struct MusicNote: Codable, Equatable, Comparable {
-    
     enum Scale7: Int, Codable {
         case C = 0
         case D = 1
@@ -43,5 +42,10 @@ struct MusicNote: Codable, Equatable, Comparable {
     
     static func < (lhs: MusicNote, rhs: MusicNote) -> Bool {
         return lhs.midiSemitone < rhs.midiSemitone
+    }
+    
+    static func fromMIDINoteNumber(_ number: Int8, key: Scale7 = .C) -> MusicNote {
+        let randomNum = Int.random(in: 0...6)
+        return MusicNote(scale7: Scale7(rawValue: randomNum)!, accidental: .natural, octave: 4)
     }
 }

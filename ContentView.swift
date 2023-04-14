@@ -1,199 +1,151 @@
 import SwiftUI
+import AudioKit
+import SoundpipeAudioKit
+import AudioKitUI
+import Keyboard
 
-struct GradientProgressStyle<Stroke: ShapeStyle, Background: ShapeStyle>: ProgressViewStyle {
-    var stroke: Stroke
-    var fill: Background
-    var caption: String = ""
-    var cornerRadius: CGFloat = 10
-    var height: CGFloat = 20
-    var animation: Animation = .easeInOut
+class InstrumentEXSConductor: ObservableObject, HasAudioEngine {
+    let engine = AudioEngine()
+    var instrument = MIDISampler(name: "Instrument 1")
+    var displayKey: Key = .C
+    @Published var intervalDescription: String = ""
     
-    func makeBody(configuration: Configuration) -> some View {
-        let fractionCompleted = configuration.fractionCompleted ?? 0
+    private var note1: Note?
+    private var note2: Note?
+
+    func noteOn(pitch: Pitch, point _: CGPoint) {
+        // print(Date(), MusicNote.fromMIDINoteNumber(pitch.midiNoteNumber))
+        instrument.play(noteNumber: MIDINoteNumber(pitch.midiNoteNumber), velocity: 90, channel: 0)
+        if note1 == nil {
+            note1 = Note(pitch: Pitch(pitch.midiNoteNumber), key: displayKey)
+        } else if note2 == nil {
+            note2 = Note(pitch: Pitch(pitch.midiNoteNumber), key: displayKey)
+        }
+    }
+
+    func noteOff(pitch: Pitch) {
+        instrument.stop(noteNumber: MIDINoteNumber(pitch.midiNoteNumber), channel: 0)
         
-        return VStack {
-            ZStack(alignment: .topLeading) {
-                GeometryReader { geo in
-                    Rectangle()
-                        .fill(fill)
-                        .frame(maxWidth: geo.size.width * CGFloat(fractionCompleted))
-                        .animation(animation)
-                }
+        if let note1 = note1, let note2 = note2 {
+            if let interval = Tonic.Interval.betweenNotes(note1, note2) {
+                print(interval)
+                intervalDescription = interval.longDescription
             }
-            .frame(height: height)
-            .cornerRadius(cornerRadius)
-            .overlay(
-                RoundedRectangle(cornerRadius: cornerRadius)
-                        .stroke(stroke, lineWidth: 2)
-            )
-            
-            if !caption.isEmpty {
-                Text("\(caption)")
-                    .font(.caption)
+            self.note1 = nil
+            self.note2 = nil
+        }
+    }
+
+    init() {
+        engine.output = instrument
+
+        // Load EXS file (you can also load SoundFonts and WAV files too using the AppleSampler Class)
+        do {
+            if let fileURL = Bundle.main.url(forResource: "sawPiano1", withExtension: "exs") {
+                try instrument.loadInstrument(url: fileURL)
+            } else {
+                Log("Could not find file")
             }
+        } catch {
+            Log("Could not load instrument")
+        }
+        do {
+            try engine.start()
+        } catch {
+            Log("AudioKit did not start!")
         }
     }
 }
 
 struct ContentView: View {
-    private func test_getAboveIntervalNoteFrom(_ text: String, _ note: MusicNote?) {
-        guard let note = note else {
-            return
+    @StateObject var conductor = InstrumentEXSConductor()
+    
+    let keyList: [Key] = [.C, .Db, .D, .Eb, .E, .F, .Gb, .G, .Ab, .A, .Bb, .B]
+    @State var currentKeyIndex = 0
+    @State private var isDisplayFlat = false
+    
+    private var keyTextIndex: Int {
+        if currentKeyIndex == keyList.count - 1 {
+            return currentKeyIndex + (isDisplayFlat ? -1 : 0)
         }
         
-        let component = text.components(separatedBy: ", ")
-        
-        print(component, note.scale7, note.accidental, note.octave)
+        return currentKeyIndex + (isDisplayFlat ? 1 : 0)
     }
     
-    static let color0 = Color(red: 255/255, green: 255/255, blue: 0/255)
-    static let color1 = Color(red: 0/255, green: 188/255, blue: 212/255)
-    static let color2 = Color(red: 238/255, green: 130/255, blue: 238/255)
-    // let gradient = Gradient(colors: [color0, color1, color2])
-    
-    @State private var gradient = LinearGradient(
-       gradient: Gradient(colors: [.green, .blue]),
-       startPoint: .top,
-       endPoint: .bottom
-   )
-    
-    @State var progress: Double = 40.0
-    
     var body: some View {
-        let gradientStyle = GradientProgressStyle(
-            stroke: gradient,
-            fill: gradient,
-            caption: "Some fancy caption"
-        )
-        
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundColor(.accentColor)
-            Text("Hello, world!")
-            
-            ProgressView(value: progress, total: 100)
-                .progressViewStyle(gradientStyle)
-                
-                .foregroundStyle(LinearGradient(gradient: Gradient(colors: [.white, .black]), startPoint: .top, endPoint: .bottom))
-                // .frame(width: 100, height: 8)
-                // .scaleEffect(x: 1, y: 8, anchor: .center)
-                // .clipShape(RoundedRectangle(cornerRadius: 10))
-            Button {
-                progress += 10.0
-            } label: {
-                Text("plus")
+        VStack(spacing: 0) {
+            Spacer()
+                .frame(height: 20)
+            HStack {
+                Button {
+                    
+                } label: {
+                    Label("View Status", systemImage: "chart.bar.fill")
+                }
+                Spacer()
+                Button {
+                    
+                } label: {
+                    Label("Help", systemImage: "questionmark.circle.fill")
+                }
+                Button {
+                    
+                } label: {
+                    Image(systemName: "gearshape.fill")
+                }
+            }.padding([.leading, .trailing], 10)
+            Spacer()
+            Image("sample")
+            VStack(spacing: 0) {
+                ZStack {
+                    Color.orange
+                    HStack {
+                        Spacer()
+                        Text(conductor.intervalDescription)
+                        Button("Toggle Sharp/Flat") {
+                            isDisplayFlat.toggle()
+                            conductor.displayKey = keyList[keyTextIndex]
+                        }
+                        Button("-") {
+                            guard currentKeyIndex > 0 else {
+                                return
+                            }
+                            currentKeyIndex -= 1
+                            
+                        }
+                        Button("C") {
+                            currentKeyIndex = 0
+                        }
+                        Button("+") {
+                            guard currentKeyIndex < keyList.count - 1 else {
+                                return
+                            }
+                            currentKeyIndex += 1
+                        }
+                    }
+                }
+                Keyboard(
+                    layout: .piano(
+                        pitchRange: Pitch(60 + keyList[currentKeyIndex].number) ... Pitch(72 + keyList[currentKeyIndex].number)),
+                    noteOn: conductor.noteOn,
+                    noteOff: conductor.noteOff) { pitch, isActivated in
+                    KeyboardKey(pitch: pitch,
+                                isActivated: isActivated,
+                                text: pitch.note(in: keyList[keyTextIndex]).description,
+                                pressedColor: Color(PitchColor.newtonian[Int(pitch.pitchClass)]),
+                                alignment: .bottom)
+                }
+                    .shadow(radius: 5)
+                    .frame(height: 240)
+                    
             }
             
-            Button {
-                progress = 0
-            } label: {
-                Text("Reset")
-            }
-        }.onAppear {
-            // ******** TEST (재래식) ********
-            
-            // countOfHalfStep:  be
-            // 4, 8, 11, 15, 18, 22...
-            // 1, 2,  3,  4,  5,  6...
-            print(IntervalHelper.shared.countOfHalfStep(scale7: .C, intervalNumber: 3))
-            print(IntervalHelper.shared.countOfHalfStep(scale7: .C, intervalNumber: 4))
-            print(IntervalHelper.shared.countOfHalfStep(scale7: .C, intervalNumber: 7))
-            print(IntervalHelper.shared.countOfHalfStep(scale7: .C, intervalNumber: 8))
-            print(IntervalHelper.shared.countOfHalfStep(scale7: .C, intervalNumber: 11))
-            print(IntervalHelper.shared.countOfHalfStep(scale7: .C, intervalNumber: 15))
-            print(IntervalHelper.shared.countOfHalfStep(scale7: .C, intervalNumber: 18))
-            print(IntervalHelper.shared.countOfHalfStep(scale7: .C, intervalNumber: 22))
-            
-            //
-            let major_3 = Interval(quality: .major, number: 3)
-            let major_6 = Interval(quality: .major, number: 6)
-            let major_7 = Interval(quality: .major, number: 7)
-
-            let minor_3 = Interval(quality: .minor, number: 3)
-            let minor_6 = Interval(quality: .minor, number: 6)
-            let minor_7 = Interval(quality: .minor, number: 7)
-
-            let perfect_4 = Interval(quality: .perfect, number: 4)
-            let perfect_5 = Interval(quality: .perfect, number: 5)
-
-            let aug_1 = Interval(quality: .augmented, number: 1)
-            let aug_2 = Interval(quality: .augmented, number: 2)
-
-            let dim_5 = Interval(quality: .diminished, number: 5)
-
-            let calc = IntervalHelper.shared.aboveIntervalNoteFrom
-            
-            // 2) 장음정
-            // 2-1) 장 3도 이하이고, 두 음 사이에 반음이 없다면, prefix는 그대로 따라간다.
-            // 예) C# -> E#, Gb -> Bb, G -> B
-            test_getAboveIntervalNoteFrom("E, sharp", calc(MusicNote(scale7: .C, accidental: .sharp), major_3))
-            test_getAboveIntervalNoteFrom("B, flat", calc(MusicNote(scale7: .G, accidental: .flat), major_3))
-            test_getAboveIntervalNoteFrom("B, nat", calc(MusicNote(scale7: .G, accidental: .natural), major_3))
-            
-            // 2-2) 장 3도 이하이고, 두 음 사이에 반음이 한 개 있다면 (3-4 또는 7-8), 원래 음에서 반음이 높아진다(=prefix가 1단계 높아진다).
-            // 예) E -> G는 E -> G#, Eb -> Gb는 Eb -> G(=)
-            test_getAboveIntervalNoteFrom("G, sharp", calc(MusicNote(scale7: .E, accidental: .natural), major_3))
-            test_getAboveIntervalNoteFrom("G, nat", calc(MusicNote(scale7: .E, accidental: .flat), major_3))
-            
-            // 2-3) 장 6 ~ 7도이고, 두 음 사이에 반음이 한 개 있다면 prefix는 그대로 따라간다.
-            // 예) C -> A, Db -> Bb, G# -> E#
-            test_getAboveIntervalNoteFrom("A, nat", calc(MusicNote(scale7: .C, accidental: .natural), major_6))
-            test_getAboveIntervalNoteFrom("B, flat", calc(MusicNote(scale7: .D, accidental: .flat), major_6))
-            test_getAboveIntervalNoteFrom("E, sharp, +1", calc(MusicNote(scale7: .G, accidental: .sharp), major_6))
-            
-            // 2-4) 장 6 ~ 7도이고, 두 음 사이에 반음이 두 개 있다면, 원래 음에서 반음이 높아진다(=prefix가 1단계 높아진다).
-            // 예) E -> C# (EF, BC), A -> F# (BC, EF), Bb -> G (BC, EF)
-            test_getAboveIntervalNoteFrom("D, sharp, +1", calc(MusicNote(scale7: .E, accidental: .natural), major_7))
-            test_getAboveIntervalNoteFrom("F, sharp, +1", calc(MusicNote(scale7: .A, accidental: .natural), major_6))
-            test_getAboveIntervalNoteFrom("G, nat, +1", calc(MusicNote(scale7: .B, accidental: .flat), major_6))
-            
-            // 3) 단음정
-            // 장음정을 기준으로 먼저 계산한 뒤, 반음 내린다(=prefix는 1단계 낮아진다).
-            // 예1) C -> Eb (단 3도, from E), Eb -> Gb (단 3도, from G), Gb -> Bbb (from Bb), F# -> A (단 3도, from A#)
-            // 예2) E -> C (from C#), Db -> Bbb (from Bb), Bb -> Ab (from A)
-            test_getAboveIntervalNoteFrom("E, flat", calc(MusicNote(scale7: .C, accidental: .natural), minor_3))
-            test_getAboveIntervalNoteFrom("G, flat", calc(MusicNote(scale7: .E, accidental: .flat), minor_3))
-            test_getAboveIntervalNoteFrom("B, DoubleFlat", calc(MusicNote(scale7: .G, accidental: .flat), minor_3))
-            test_getAboveIntervalNoteFrom("A, nat", calc(MusicNote(scale7: .F, accidental: .sharp), minor_3))
-            
-            test_getAboveIntervalNoteFrom("C, nat, +1", calc(MusicNote(scale7: .E, accidental: .natural), minor_6))
-            test_getAboveIntervalNoteFrom("B, DoubleFlat", calc(MusicNote(scale7: .D, accidental: .flat), minor_6))
-            test_getAboveIntervalNoteFrom("A, flat, +1", calc(MusicNote(scale7: .B, accidental: .flat), minor_7))
-            
-            // 4) 완전음정
-            // 4-1) 완전음정 사이에 반음이 한 개 있다면, prefix는 그대로 따라간다.
-            // 예) C -> F (EF), Eb -> Ab (EF), Bb -> Eb (BC), E -> B
-            test_getAboveIntervalNoteFrom("F, nat", calc(MusicNote(scale7: .C, accidental: .natural), perfect_4))
-            test_getAboveIntervalNoteFrom("A, flat", calc(MusicNote(scale7: .E, accidental: .flat), perfect_4))
-            test_getAboveIntervalNoteFrom("E, flat,+ 1", calc(MusicNote(scale7: .B, accidental: .flat), perfect_4))
-            test_getAboveIntervalNoteFrom("B, nat,", calc(MusicNote(scale7: .C, accidental: .natural), perfect_5))
-
-            // 반음 2개?
-            // (BC EF)
-            test_getAboveIntervalNoteFrom("F, nat, +1", calc(MusicNote(scale7: .B, accidental: .flat), perfect_5))
-            test_getAboveIntervalNoteFrom("E, flat, +1", calc(MusicNote(scale7: .A, accidental: .flat), perfect_5))
-            
-            // 4-2) 완전음정 사이에 반음이 하나도 없다면, 원래 음에서 반음이 낮아진다(=prefix는 1단계 낮아진다).
-            // 참고) 이 케이스는 F밖에 존재할 수밖에 없다.
-            // 예) F -> Bb, F# -> B, Fb -> Fbb
-            test_getAboveIntervalNoteFrom("B, flat", calc(MusicNote(scale7: .F, accidental: .natural), perfect_4))
-            test_getAboveIntervalNoteFrom("B, nat", calc(MusicNote(scale7: .F, accidental: .sharp), perfect_4))
-            test_getAboveIntervalNoteFrom("B, DoubleFlat", calc(MusicNote(scale7: .F, accidental: .flat), perfect_4))
-            
-            // 5) 증음정
-            // 장음정 또는 완전음정을 기준으로 먼저 계산한 뒤, 반음씩 올리면 된다(=prefix가 1단계 높아진다).
-            // 예) C -> C# (증 1도, from C), E -> F## (증 2도, from F#)
-            test_getAboveIntervalNoteFrom("C, sharp", calc(MusicNote(scale7: .C, accidental: .natural), aug_1))
-            test_getAboveIntervalNoteFrom("F, DoubleSharp", calc(MusicNote(scale7: .E, accidental: .natural), aug_2))
-            test_getAboveIntervalNoteFrom("D, nat", calc(MusicNote(scale7: .D, accidental: .flat), aug_1))
-            
-            // 6) 감음정
-            // 감 5도만 있음 (겹증, 겹감, 감 4도(=장 3도) 제외)
-            // 완전 5도에서 반음 내린다(=prefix는 1단계 낮아진다).
-            // 예) Eb -> Bbb (from Bb), F# -> C (from C#)
-            test_getAboveIntervalNoteFrom("B, DoubleFlat", calc(MusicNote(scale7: .E, accidental: .flat), dim_5))
-            test_getAboveIntervalNoteFrom("C, nat, +1", calc(MusicNote(scale7: .F, accidental: .sharp), dim_5))
+        }
+        .onAppear {
+            conductor.start()
+            print(Bundle.main)
+        }.onDisappear {
+            conductor.stop()
         }
     }
 }
