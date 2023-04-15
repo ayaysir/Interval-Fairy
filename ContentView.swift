@@ -9,27 +9,41 @@ class InstrumentEXSConductor: ObservableObject, HasAudioEngine {
     var instrument = MIDISampler(name: "Instrument 1")
     var displayKey: Key = .C
     @Published var intervalDescription: String = ""
+    @Published var notesDescription: String = ""
     
-    private var note1: Note?
-    private var note2: Note?
+    private(set) var note1: Note?
+    private(set) var note2: Note?
+    
 
     func noteOn(pitch: Pitch, point _: CGPoint) {
         // print(Date(), MusicNote.fromMIDINoteNumber(pitch.midiNoteNumber))
         instrument.play(noteNumber: MIDINoteNumber(pitch.midiNoteNumber), velocity: 90, channel: 0)
         if note1 == nil {
             note1 = Note(pitch: Pitch(pitch.midiNoteNumber), key: displayKey)
+            notesDescription = note1!.description
         } else if note2 == nil {
             note2 = Note(pitch: Pitch(pitch.midiNoteNumber), key: displayKey)
+            notesDescription = "\(note1!.description) and \(note2!.description)"
         }
+        
     }
 
     func noteOff(pitch: Pitch) {
         instrument.stop(noteNumber: MIDINoteNumber(pitch.midiNoteNumber), channel: 0)
         
         if let note1 = note1, let note2 = note2 {
+            let descBefore = notesDescription
+            
+            notesDescription = descBefore + " = \n..."
             if let interval = Tonic.Interval.betweenNotes(note1, note2) {
-                print(interval)
                 intervalDescription = interval.longDescription
+                Timer.scheduledTimer(withTimeInterval: 1, repeats: false) { [unowned self] _ in
+                    notesDescription = descBefore + " = \n\(intervalDescription)"
+                }
+            } else {
+                Timer.scheduledTimer(withTimeInterval: 1, repeats: false) { [unowned self] _ in
+                    notesDescription = descBefore + " = \n?"
+                }
             }
             self.note1 = nil
             self.note2 = nil
@@ -57,6 +71,42 @@ class InstrumentEXSConductor: ObservableObject, HasAudioEngine {
     }
 }
 
+class TamagotchiMovingViewModel: ObservableObject {
+    @Published var offset: CGSize = .zero
+    
+    private var normal: [CGSize] = [
+        // 왼쪽으로 4칸 이동
+        CGSize(width: -10, height: 0),
+        CGSize(width: -20, height: 0),
+        CGSize(width: -30, height: 0),
+        CGSize(width: -40, height: 0),
+        // 오른쪽으로 4칸 이동
+        CGSize(width: -30, height: -10),
+        CGSize(width: -20, height: -10),
+        CGSize(width: -10, height: -10),
+        CGSize(width: -0, height: -10),
+        // 오른쪽으로 4칸 이동
+        CGSize(width: 10, height: -10),
+        CGSize(width: 20, height: -10),
+        CGSize(width: 30, height: -10),
+        CGSize(width: 40, height: -10),
+        // 왼쪽으로 4칸 이동
+        CGSize(width: 30, height: 0),
+        CGSize(width: 20, height: 0),
+        CGSize(width: 10, height: 0),
+        CGSize(width: 0, height: 0),
+    ]
+    private var moveIndex = 0
+    
+    func moveNormal() {
+        Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [unowned self] _ in
+            offset = normal[moveIndex % normal.count]
+            moveIndex += 1
+            
+        }
+    }
+}
+
 struct ContentView: View {
     @StateObject var conductor = InstrumentEXSConductor()
     
@@ -67,6 +117,7 @@ struct ContentView: View {
     @State private var showFallStar = false
     
     @StateObject var starVM = StarViewModel(maxCapacity: 3)
+    @StateObject var tamagotchiMovingVM = TamagotchiMovingViewModel()
     
     @State var star0_appeared = false
     @State var star1_appeared = false
@@ -110,10 +161,32 @@ struct ContentView: View {
             
             ZStack(alignment: .top) {
                 // 밑으로 갈수록 z-index 높음
-                
-                Image("sample3")
-                    .resizable()
-                    .frame(width: UIScreen.main.bounds.width)
+                // Rect Area
+                ZStack(alignment: .bottom) {
+                    // Background
+                    Rectangle()
+                        .fill(.cyan)
+                        .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width * 1.2)
+                    // Balloon
+                    if !conductor.notesDescription.isEmpty {
+                        ZStack(alignment: .topLeading) {
+                            // RoundedRectangle(cornerSize: CGSize(width: 10, height: 10))
+                            //     .fill(.white)
+                            Image("balloon")
+                                .resizable()
+                            Text(conductor.notesDescription)
+                                .offset(x: 25, y: 15)
+                        }
+                        .offset(x: 100, y: -300)
+                        .frame(width: 150, height: 100)
+                    }
+                    
+                    // Tamagotchi
+                    Image("sample4")
+                        .resizable()
+                        .frame(width: 200, height: 200)
+                        .offset(tamagotchiMovingVM.offset)
+                }
                 // Stars
                 StarView(conductor: conductor, starVM: starVM, index: 0) {
                     star0_elapsedSeconds = 0
@@ -141,7 +214,6 @@ struct ContentView: View {
                                 return
                             }
                             currentKeyIndex -= 1
-                            
                         }
                         Button("C") {
                             currentKeyIndex = 0
@@ -173,6 +245,7 @@ struct ContentView: View {
             conductor.start()
             print(Bundle.main)
             
+            tamagotchiMovingVM.moveNormal()
             /*
              랜덤으로 별사탕 뿌리기
              간격:

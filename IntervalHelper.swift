@@ -5,7 +5,7 @@
 //  Created by 윤범태 on 2023/04/10.
 //
 
-import Foundation
+import Tonic
 
 struct IntervalHelper {
     static var shared = IntervalHelper()

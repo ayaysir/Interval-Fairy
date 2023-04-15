@@ -14,9 +14,9 @@ public extension Note {
             .B, .Bb, .Bs,
             .C, .Cb, .Cs,
             .D, .Db, .Ds,
-            .E, .Eb, .Es,
+            .E, .Eb,
             .F, .Fb, .Fs,
-            .G, .Gb, .Gs,
+            .G, .Gb,
         ]
         
         let index = Int.random(in: 0..<notes.count)
