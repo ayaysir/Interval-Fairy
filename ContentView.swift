@@ -41,7 +41,7 @@ class InstrumentEXSConductor: ObservableObject, HasAudioEngine {
 
         // Load EXS file (you can also load SoundFonts and WAV files too using the AppleSampler Class)
         do {
-            if let fileURL = Bundle.main.url(forResource: "sawPiano1", withExtension: "exs") {
+            if let fileURL = Bundle.main.url(forResource: "Box Harp - Picked", withExtension: "exs") {
                 try instrument.loadInstrument(url: fileURL)
             } else {
                 Log("Could not find file")
@@ -63,6 +63,17 @@ struct ContentView: View {
     let keyList: [Key] = [.C, .Db, .D, .Eb, .E, .F, .Gb, .G, .Ab, .A, .Bb, .B]
     @State var currentKeyIndex = 0
     @State private var isDisplayFlat = false
+    
+    @State private var showFallStar = false
+    
+    @StateObject var starVM = StarViewModel(maxCapacity: 3)
+    
+    @State var star0_appeared = false
+    @State var star1_appeared = false
+    @State var star2_appeared = false
+    @State var star0_elapsedSeconds = 0
+    @State var star1_elapsedSeconds = 0
+    @State var star2_elapsedSeconds = 0
     
     private var keyTextIndex: Int {
         if currentKeyIndex == keyList.count - 1 {
@@ -94,8 +105,27 @@ struct ContentView: View {
                     Image(systemName: "gearshape.fill")
                 }
             }.padding([.leading, .trailing], 10)
+            
             Spacer()
-            Image("sample")
+            
+            ZStack(alignment: .top) {
+                // 밑으로 갈수록 z-index 높음
+                
+                Image("sample3")
+                    .resizable()
+                    .frame(width: UIScreen.main.bounds.width)
+                // Stars
+                StarView(conductor: conductor, starVM: starVM, index: 0) {
+                    star0_elapsedSeconds = 0
+                }
+                StarView(conductor: conductor, starVM: starVM, index: 1) {
+                    star1_elapsedSeconds = 0
+                }
+                StarView(conductor: conductor, starVM: starVM, index: 2) {
+                    star2_elapsedSeconds = 0
+                }
+            }
+            
             VStack(spacing: 0) {
                 ZStack {
                     Color.orange
@@ -137,13 +167,71 @@ struct ContentView: View {
                 }
                     .shadow(radius: 5)
                     .frame(height: 240)
-                    
             }
-            
         }
         .onAppear {
             conductor.start()
             print(Bundle.main)
+            
+            /*
+             랜덤으로 별사탕 뿌리기
+             간격:
+              - 한 화면 맥스 3개
+              - 별사탕 뿌리는 것은 20~30초 랜덤
+              - 첫 별사탕은 무조건 5초 후, 그 이후 30초 ~40초 랜덤
+              - 이미 별사탕이 화면에 있는 경우(timer가 invalidate되지 않은 경우) 뿌리지 않음
+              - invalidate 확인된 경우 10~20초 후에 새로운 별사탕
+             */
+            starVM.invalidatedHandler = { index in
+                switch index {
+                case 0:
+                    star0_elapsedSeconds = 0
+                case 1:
+                    star1_elapsedSeconds = 0
+                case 2:
+                    star2_elapsedSeconds = 0
+                default:
+                    break
+                }
+            }
+            Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { timer in
+                star0_elapsedSeconds += 1
+                star1_elapsedSeconds += 1
+                star2_elapsedSeconds += 1
+                
+                if !star0_appeared && star0_elapsedSeconds == 3 {
+                    starVM.startAnimation(playIndex: 0)
+                    star0_elapsedSeconds = 0
+                    star0_appeared = true
+                }
+                
+                if !star1_appeared && star1_elapsedSeconds == 15 {
+                    starVM.startAnimation(playIndex: 1)
+                    star1_elapsedSeconds = 0
+                    star1_appeared = true
+                }
+                
+                if !star2_appeared && star2_elapsedSeconds == 30 {
+                    starVM.startAnimation(playIndex: 2)
+                    star2_elapsedSeconds = 0
+                    star2_appeared = true
+                }
+                
+                if star0_appeared && starVM.hideStar[0] && star0_elapsedSeconds == 12 {
+                    starVM.startAnimation(playIndex: 0)
+                    star0_elapsedSeconds = 0
+                }
+                
+                if star1_appeared && starVM.hideStar[1] && star1_elapsedSeconds == 11 {
+                    starVM.startAnimation(playIndex: 1)
+                    star1_elapsedSeconds = 0
+                }
+                
+                if star2_appeared && starVM.hideStar[2] && star2_elapsedSeconds == 13 {
+                    starVM.startAnimation(playIndex: 2)
+                    star2_elapsedSeconds = 0
+                }
+            }
         }.onDisappear {
             conductor.stop()
         }
