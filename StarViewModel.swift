@@ -24,10 +24,10 @@ class StarViewModel: ObservableObject {
     init(maxCapacity: Int) {
         let range = 0..<maxCapacity
         self.offsets = range.map { _ in
-            CGSize(width: 0, height: -20)
+            CGSize(width: 0, height: 0)
         }
         self.widths = range.map { _ in 0 }
-        self.heights = range.map { _ in -20 }
+        self.heights = range.map { _ in 0 }
         self.isTapped = range.map { _ in false }
         self.hideStar = range.map { _ in true }
         self.noteName = range.map { _ in Note.randomNote() }
@@ -35,7 +35,7 @@ class StarViewModel: ObservableObject {
     }
     
     func resetValues(playIndex: Int) {
-        self.offsets[playIndex] = CGSize(width: 0, height: -20)
+        self.offsets[playIndex] = CGSize(width: 0, height: 0)
         self.widths[playIndex] = 0
         self.heights[playIndex] = 20
         self.isTapped[playIndex] = false

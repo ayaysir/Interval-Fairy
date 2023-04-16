@@ -14,7 +14,6 @@ class InstrumentEXSConductor: ObservableObject, HasAudioEngine {
     
     private(set) var note1: Note?
     private(set) var note2: Note?
-    
 
     func noteOn(pitch: Pitch, point _: CGPoint) {
         // print(Date(), MusicNote.fromMIDINoteNumber(pitch.midiNoteNumber))
@@ -43,47 +42,43 @@ class InstrumentEXSConductor: ObservableObject, HasAudioEngine {
                 intervalDescription = interval.longDescription
                 let quality = interval.longDescription.split(separator: " ")[0]
                 
-                Timer.scheduledTimer(withTimeInterval: 1, repeats: false) { [unowned self] _ in
-                    notesDescription = descBefore + " = \n\(intervalDescription)"
-                    print(quality)
-                    
-                    // TODO: - Status 증가 여부를 표시 (화면 구석에 애니메이팅된 텍스트로)
-                    StatusManager.shared.discipline += 100
-                    StatusManager.shared.satiety += 100
-                    
-                    switch quality {
-                    case "Perfect":
-                        StatusManager.shared.happy -= 1000
-                        StatusManager.shared.hygiene += 5000
-                        StatusManager.shared.health += 100
-                        StatusManager.shared.perfectness += 1000
-                    case "Major":
-                        StatusManager.shared.happy += 1000
-                        StatusManager.shared.health += 100
-                    case "Minor":
-                        StatusManager.shared.happy -= 1000
-                        StatusManager.shared.health -= 100
-                    case "Augmented":
-                        StatusManager.shared.age += 40
-                        StatusManager.shared.happy -= 1000
-                        StatusManager.shared.hygiene += 5000
-                        StatusManager.shared.health -= 100
-                        StatusManager.shared.augDim += Int.random(in: 500...1000)
-                    case "Diminished":
-                        StatusManager.shared.age -= 40
-                        StatusManager.shared.happy -= 1000
-                        StatusManager.shared.health -= 100
-                        StatusManager.shared.augDim -= Int.random(in: 500...1000)
-                    default:
-                        break
-                    }
-                    
-                    StatusManager.shared.printAllStatus()
+                notesDescription = descBefore + " = \n\(intervalDescription)"
+                print(quality)
+                
+                // TODO: - Status 증가 여부를 표시 (화면 구석에 애니메이팅된 텍스트로)
+                StatusManager.shared.discipline += 100
+                StatusManager.shared.satiety += 100
+                
+                switch quality {
+                case "Perfect":
+                    StatusManager.shared.happy -= 1000
+                    StatusManager.shared.hygiene += 5000
+                    StatusManager.shared.health += 100
+                    StatusManager.shared.perfectness += 1000
+                case "Major":
+                    StatusManager.shared.happy += Int.random(in: 1000...2000)
+                    StatusManager.shared.health += 100
+                case "Minor":
+                    StatusManager.shared.happy -= 1000
+                    StatusManager.shared.health -= 100
+                case "Augmented":
+                    StatusManager.shared.age += 40
+                    StatusManager.shared.happy -= 1000
+                    StatusManager.shared.hygiene += 5000
+                    StatusManager.shared.health -= 100
+                    StatusManager.shared.augDim += Int.random(in: 500...1000)
+                case "Diminished":
+                    StatusManager.shared.age -= 40
+                    StatusManager.shared.happy -= 1000
+                    StatusManager.shared.health -= 100
+                    StatusManager.shared.augDim -= Int.random(in: 500...1000)
+                default:
+                    break
                 }
+                
+                // StatusManager.shared.printAllStatus()
             } else {
-                Timer.scheduledTimer(withTimeInterval: 1, repeats: false) { [unowned self] _ in
-                    notesDescription = descBefore + " = \n?"
-                }
+                notesDescription = descBefore + " = \n?"
             }
             self.note1 = nil
             self.note2 = nil
@@ -163,6 +158,12 @@ struct ContentView: View {
     @State var elapsedSeconds = [0, 0, 0, 0, 0]
     
     @State var showStatusPopup = false
+    @State var blurMainArea = false
+    
+    @State var statusTimer: Timer?
+    @State var lastRecordedTime: Date?
+    
+    @Environment(\.scenePhase) var scenePhase
     
     private var keyTextIndex: Int {
         if currentKeyIndex == keyList.count - 1 {
@@ -180,6 +181,7 @@ struct ContentView: View {
                 HStack {
                     Button {
                         showStatusPopup = true
+                        blurMainArea = true
                     } label: {
                         Label("View Status", systemImage: "chart.bar.fill")
                     }
@@ -238,7 +240,7 @@ struct ContentView: View {
                                 StatusManager.shared.weight += Int(Double(weight) * 0.1)
                             }
                             
-                            StatusManager.shared.printAllStatus()
+                            // StatusManager.shared.printAllStatus()
                         }
                     }
                 }
@@ -286,6 +288,7 @@ struct ContentView: View {
                         .frame(height: UIScreen.main.bounds.height * 0.3)
                 }
             }
+            .blur(radius: blurMainArea ? 20 : 0)
             // Popup
             if showStatusPopup {
                 ZStack {
@@ -305,52 +308,64 @@ struct ContentView: View {
                          static let stkPerfectness = "STATUS_PERFECTNESS"
                          static let stkAugDim = "STATUS_AUGDIM"
                          */
-                        HStack {
-                            Text("AGE")
-                                .font(.title)
-                            Spacer()
-                            Text(StatusManager.shared.ageDescription)
+                        VStack {
+                            HStack {
+                                Text("AGE")
+                                    .font(.title)
+                                Spacer()
+                                Text(StatusManager.shared.ageDescription)
+                            }
+                            .padding(20)
+                            Divider()
                         }
-                        .padding(20)
-                        Divider()
-                        HStack {
-                            Text("WEIGHT")
-                                .font(.title)
-                            Spacer()
-                            Text(StatusManager.shared.weightDescription)
-                                
+                        VStack {
+                            HStack {
+                                Text("WEIGHT")
+                                    .font(.title)
+                                Spacer()
+                                Text(StatusManager.shared.weightDescription)
+                                    
+                            }
+                            .padding(20)
+                            Divider()
                         }
-                        .padding(20)
-                        Divider()
-                        HStack {
-                            Text("DISCIPLINE")
-                                .font(.title)
-                            Spacer()
-                            ProgressView(value: Double(StatusManager.shared.discipline), total: 10000)
-                                .progressViewStyle(.linear)
-                                .frame(width: 300)
+                        VStack {
+                            HStack {
+                                Text("DISCIPLINE")
+                                    .font(.title)
+                                Spacer()
+                                ProgressView(value: Double(StatusManager.shared.discipline), total: 10000)
+                                    .progressViewStyle(.linear)
+                                    .frame(width: 300)
+                            }
+                            .padding(20)
+                            Divider()
                         }
-                        .padding(20)
-                        Divider()
-                        HStack {
-                            Text("HUNGRY")
-                                .font(.title)
-                            Spacer()
-                            ProgressView(value: Double(StatusManager.shared.satiety), total: 10000)
-                                .progressViewStyle(.linear)
-                                .frame(width: 300)
+                        VStack {
+                            HStack {
+                                Text("HUNGRY")
+                                    .font(.title)
+                                Spacer()
+                                ProgressView(value: Double(StatusManager.shared.satiety), total: 10000)
+                                    .progressViewStyle(.linear)
+                                    .frame(width: 300)
+                            }
+                            .padding(20)
+                            Divider()
                         }
-                        .padding(20)
-                        Divider()
-                        HStack {
-                            Text("HAPPY")
-                                .font(.title)
-                            Spacer()
-                            ProgressView(value: Double(StatusManager.shared.happy), total: 10000)
-                                .progressViewStyle(.linear)
-                                .frame(width: 300)
+                        VStack {
+                            HStack {
+                                Text("HAPPY")
+                                    .font(.title)
+                                Spacer()
+                                ProgressView(value: Double(StatusManager.shared.happy), total: 10000)
+                                    .progressViewStyle(.linear)
+                                    .frame(width: 300)
+                            }
+                            .padding(20)
+                            Divider()
                         }
-                        .padding(20)
+                        Text(StatusManager.shared.allStatus)
                     }
                     .background(.white)
                     .cornerRadius(15)
@@ -362,15 +377,19 @@ struct ContentView: View {
                 }
                 .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height * 1.2)
                 .onTapGesture {
-                    print("오버레이")
+                    print("오버레이 닫기")
                     showStatusPopup = false
+                    blurMainArea = false
                 }
-            }
+            } // if showPopup end
             
         } // Root Zstack End
         .onAppear {
+            print("ContentView: OnAppear ========")
             conductor.start()
             print(Bundle.main)
+            
+            // StatusManager.shared.calculate(startDate: Date(timeIntervalSince1970: 1681653643))
             
             tamagotchiMovingVM.moveNormal()
             /*
@@ -386,9 +405,6 @@ struct ContentView: View {
                 self.elapsedSeconds[index] = 0
             }
             Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { timer in
-                // star0_elapsedSeconds += 1
-                // star1_elapsedSeconds += 1
-                // star2_elapsedSeconds += 1
                 for (i, _) in elapsedSeconds.enumerated() {
                     elapsedSeconds[i] += 1
                     
@@ -405,7 +421,43 @@ struct ContentView: View {
                 }
             }
         }.onDisappear {
+            print("ContentView: OnDisappear ========")
             conductor.stop()
+        }.onChange(of: scenePhase) { newPhase in
+            switch newPhase {
+            case .background:
+                print("Background")
+                statusTimer?.invalidate()
+                UserDefaults.standard.set(Date(), forKey: "STORE_lastRecordedTime")
+            case .inactive:
+                print("Inactive")
+            case .active:
+                print("Active")
+                initStatusTimer()
+            @unknown default:
+                break
+            }
+        }
+    }
+    
+    func initStatusTimer() {
+        // 타이머 등록시 시각
+        if let savedLastRecordTime = UserDefaults.standard.object(forKey: "STORE_lastRecordedTime") as? Date {
+            lastRecordedTime = savedLastRecordTime
+            UserDefaults.standard.set(nil, forKey: "STORE_lastRecordedTime")
+        } else {
+            lastRecordedTime = Date()
+        }
+        
+        // 타이머 등록
+        statusTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { timer in
+            guard let lastRecordedTime = lastRecordedTime else {
+                return
+            }
+            StatusManager.shared.calculate(startDate: lastRecordedTime)
+            print("statusTimer is validate!")
+            self.lastRecordedTime = Date()
+            UserDefaults.standard.set(Date(), forKey: "STORE_lastRecordedTime")
         }
     }
 }
