@@ -3,6 +3,7 @@ import AudioKit
 import SoundpipeAudioKit
 import AudioKitUI
 import Keyboard
+import PopupView
 
 class InstrumentEXSConductor: ObservableObject, HasAudioEngine {
     let engine = AudioEngine()
@@ -116,15 +117,13 @@ struct ContentView: View {
     
     @State private var showFallStar = false
     
-    @StateObject var starVM = StarViewModel(maxCapacity: 3)
+    @StateObject var starVM = StarViewModel(maxCapacity: 5)
     @StateObject var tamagotchiMovingVM = TamagotchiMovingViewModel()
     
-    @State var star0_appeared = false
-    @State var star1_appeared = false
-    @State var star2_appeared = false
-    @State var star0_elapsedSeconds = 0
-    @State var star1_elapsedSeconds = 0
-    @State var star2_elapsedSeconds = 0
+    @State var appeared: [Bool] = [false, false, false, false, false]
+    @State var elapsedSeconds = [0, 0, 0, 0, 0]
+    
+    @State var showStatusPopup = false
     
     private var keyTextIndex: Int {
         if currentKeyIndex == keyList.count - 1 {
@@ -135,112 +134,181 @@ struct ContentView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            Spacer()
-                .frame(height: 20)
-            HStack {
-                Button {
-                    
-                } label: {
-                    Label("View Status", systemImage: "chart.bar.fill")
-                }
-                Spacer()
-                Button {
-                    
-                } label: {
-                    Label("Help", systemImage: "questionmark.circle.fill")
-                }
-                Button {
-                    
-                } label: {
-                    Image(systemName: "gearshape.fill")
-                }
-            }.padding([.leading, .trailing], 10)
-            
-            Spacer()
-            
-            ZStack(alignment: .top) {
-                // 밑으로 갈수록 z-index 높음
-                // Rect Area
-                ZStack(alignment: .bottom) {
-                    // Background
-                    Rectangle()
-                        .fill(.cyan)
-                        .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width * 1.2)
-                    // Balloon
-                    if !conductor.notesDescription.isEmpty {
-                        ZStack(alignment: .topLeading) {
-                            // RoundedRectangle(cornerSize: CGSize(width: 10, height: 10))
-                            //     .fill(.white)
-                            Image("balloon")
-                                .resizable()
-                            Text(conductor.notesDescription)
-                                .offset(x: 25, y: 15)
-                        }
-                        .offset(x: 100, y: -300)
-                        .frame(width: 150, height: 100)
-                    }
-                    
-                    // Tamagotchi
-                    Image("sample4")
-                        .resizable()
-                        .frame(width: 200, height: 200)
-                        .offset(tamagotchiMovingVM.offset)
-                }
-                // Stars
-                StarView(conductor: conductor, starVM: starVM, index: 0) {
-                    star0_elapsedSeconds = 0
-                }
-                StarView(conductor: conductor, starVM: starVM, index: 1) {
-                    star1_elapsedSeconds = 0
-                }
-                StarView(conductor: conductor, starVM: starVM, index: 2) {
-                    star2_elapsedSeconds = 0
-                }
-            }
-            
+        ZStack {
             VStack(spacing: 0) {
-                ZStack {
-                    Color.orange
-                    HStack {
-                        Spacer()
-                        Text(conductor.intervalDescription)
-                        Button("Toggle Sharp/Flat") {
-                            isDisplayFlat.toggle()
-                            conductor.displayKey = keyList[keyTextIndex]
-                        }
-                        Button("-") {
-                            guard currentKeyIndex > 0 else {
-                                return
+                Spacer()
+                    .frame(height: 20)
+                HStack {
+                    Button {
+                        showStatusPopup = true
+                    } label: {
+                        Label("View Status", systemImage: "chart.bar.fill")
+                    }
+                    Spacer()
+                    Button {
+                        
+                    } label: {
+                        Label("Help", systemImage: "questionmark.circle.fill")
+                    }
+                    Button {
+                        
+                    } label: {
+                        Image(systemName: "gearshape.fill")
+                    }
+                }.padding([.leading, .trailing], 10)
+                
+                Spacer()
+                
+                ZStack(alignment: .top) {
+                    // 밑으로 갈수록 z-index 높음
+                    // Rect Area
+                    ZStack(alignment: .bottom) {
+                        // Background
+                        Rectangle()
+                            .fill(.cyan)
+                            
+                        // Balloon
+                        if !conductor.notesDescription.isEmpty {
+                            ZStack(alignment: .topLeading) {
+                                // RoundedRectangle(cornerSize: CGSize(width: 10, height: 10))
+                                //     .fill(.white)
+                                Image("balloon")
+                                    .resizable()
+                                Text(conductor.notesDescription)
+                                    .offset(x: 25, y: 15)
                             }
-                            currentKeyIndex -= 1
+                            .offset(x: 100, y: -300)
+                            .frame(width: 150, height: 100)
                         }
-                        Button("C") {
-                            currentKeyIndex = 0
-                        }
-                        Button("+") {
-                            guard currentKeyIndex < keyList.count - 1 else {
-                                return
-                            }
-                            currentKeyIndex += 1
+                        
+                        // Tamagotchi
+                        Image("sample4")
+                            .resizable()
+                            .frame(width: 200, height: 200)
+                            .offset(tamagotchiMovingVM.offset)
+                    }
+                    // Stars
+                    ForEach(0..<5) { index in
+                        StarView(conductor: conductor, starVM: starVM, index: index) {
+                            elapsedSeconds[index] = 0
                         }
                     }
                 }
-                Keyboard(
-                    layout: .piano(
-                        pitchRange: Pitch(60 + keyList[currentKeyIndex].number) ... Pitch(72 + keyList[currentKeyIndex].number)),
-                    noteOn: conductor.noteOn,
-                    noteOff: conductor.noteOff) { pitch, isActivated in
-                    KeyboardKey(pitch: pitch,
-                                isActivated: isActivated,
-                                text: pitch.note(in: keyList[keyTextIndex]).description,
-                                pressedColor: Color(PitchColor.newtonian[Int(pitch.pitchClass)]),
-                                alignment: .bottom)
+                .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width * 0.8)
+                
+                VStack(spacing: 0) {
+                    ZStack {
+                        Color.orange
+                        HStack {
+                            Spacer()
+                            Text(conductor.intervalDescription)
+                            Button("Toggle Sharp/Flat") {
+                                isDisplayFlat.toggle()
+                                conductor.displayKey = keyList[keyTextIndex]
+                            }
+                            Button("-") {
+                                guard currentKeyIndex > 0 else {
+                                    return
+                                }
+                                currentKeyIndex -= 1
+                            }
+                            Button("C") {
+                                currentKeyIndex = 0
+                            }
+                            Button("+") {
+                                guard currentKeyIndex < keyList.count - 1 else {
+                                    return
+                                }
+                                currentKeyIndex += 1
+                            }
+                        }
+                    }
+                    Keyboard(
+                        layout: .piano(
+                            pitchRange: Pitch(60 + keyList[currentKeyIndex].number) ... Pitch(72 + keyList[currentKeyIndex].number)),
+                        noteOn: conductor.noteOn,
+                        noteOff: conductor.noteOff) { pitch, isActivated in
+                        KeyboardKey(pitch: pitch,
+                                    isActivated: isActivated,
+                                    text: pitch.note(in: keyList[keyTextIndex]).description,
+                                    pressedColor: Color(PitchColor.newtonian[Int(pitch.pitchClass)]),
+                                    alignment: .bottom)
+                    }
+                        .shadow(radius: 5)
+                        .frame(height: UIScreen.main.bounds.height * 0.3)
                 }
-                    .shadow(radius: 5)
-                    .frame(height: 240)
             }
-        }
+            
+            if showStatusPopup {
+                VStack(alignment: .leading) {
+                    /*
+                     // visible
+                     static let stkAge = "STATUS_AGE"
+                     static let stkWeight = "STATUS_WEIGHT"
+                     static let stkDiscipline = "STATUS_DISCIPLINE"
+                     static let stkSatiety = "STATUS_SATIETY"
+                     static let stkHappy = "STATUS_HAPPY"
+                     
+                     // invisible
+                     static let stkHelath = "STATUS_HEALTH"
+                     static let sktHygiene = "STATUS_HYGIENE"
+                     static let stkPerfectness = "STATUS_PERFECTNESS"
+                     static let stkAugDim = "STATUS_AUGDIM"
+                     */
+                    HStack {
+                        Text("AGE")
+                            .font(.title)
+                        Spacer()
+                        Text("3 years")
+                    }
+                    .padding(20)
+                    Divider()
+                    HStack {
+                        Text("WEIGHT")
+                            .font(.title)
+                        Spacer()
+                        Text("30 gram")
+                            
+                    }
+                    .padding(20)
+                    Divider()
+                    HStack {
+                        Text("DISCIPLINE")
+                            .font(.title)
+                        Spacer()
+                        ProgressView(value: 3000, total: 10000)
+                            .progressViewStyle(.linear)
+                            .frame(width: 300)
+                    }
+                    .padding(20)
+                    Divider()
+                    HStack {
+                        Text("HUNGRY")
+                            .font(.title)
+                        Spacer()
+                        ProgressView(value: 5000, total: 10000)
+                            .progressViewStyle(.linear)
+                            .frame(width: 300)
+                    }
+                    .padding(20)
+                    Divider()
+                    HStack {
+                        Text("HAPPY")
+                            .font(.title)
+                        Spacer()
+                        ProgressView(value: 7000, total: 10000)
+                            .progressViewStyle(.linear)
+                            .frame(width: 300)
+                    }
+                    .padding(20)
+                }
+                .background(.white)
+                .cornerRadius(15)
+                .frame(minWidth: 0, idealWidth: 750, maxWidth: 750, minHeight: 0)
+                .shadow(radius: 10)
+            }
+            
+        } // Root Zstack End
         .onAppear {
             conductor.start()
             print(Bundle.main)
@@ -256,53 +324,25 @@ struct ContentView: View {
               - invalidate 확인된 경우 10~20초 후에 새로운 별사탕
              */
             starVM.invalidatedHandler = { index in
-                switch index {
-                case 0:
-                    star0_elapsedSeconds = 0
-                case 1:
-                    star1_elapsedSeconds = 0
-                case 2:
-                    star2_elapsedSeconds = 0
-                default:
-                    break
-                }
+                self.elapsedSeconds[index] = 0
             }
             Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { timer in
-                star0_elapsedSeconds += 1
-                star1_elapsedSeconds += 1
-                star2_elapsedSeconds += 1
-                
-                if !star0_appeared && star0_elapsedSeconds == 3 {
-                    starVM.startAnimation(playIndex: 0)
-                    star0_elapsedSeconds = 0
-                    star0_appeared = true
-                }
-                
-                if !star1_appeared && star1_elapsedSeconds == 15 {
-                    starVM.startAnimation(playIndex: 1)
-                    star1_elapsedSeconds = 0
-                    star1_appeared = true
-                }
-                
-                if !star2_appeared && star2_elapsedSeconds == 30 {
-                    starVM.startAnimation(playIndex: 2)
-                    star2_elapsedSeconds = 0
-                    star2_appeared = true
-                }
-                
-                if star0_appeared && starVM.hideStar[0] && star0_elapsedSeconds == 12 {
-                    starVM.startAnimation(playIndex: 0)
-                    star0_elapsedSeconds = 0
-                }
-                
-                if star1_appeared && starVM.hideStar[1] && star1_elapsedSeconds == 11 {
-                    starVM.startAnimation(playIndex: 1)
-                    star1_elapsedSeconds = 0
-                }
-                
-                if star2_appeared && starVM.hideStar[2] && star2_elapsedSeconds == 13 {
-                    starVM.startAnimation(playIndex: 2)
-                    star2_elapsedSeconds = 0
+                // star0_elapsedSeconds += 1
+                // star1_elapsedSeconds += 1
+                // star2_elapsedSeconds += 1
+                for (i, _) in elapsedSeconds.enumerated() {
+                    elapsedSeconds[i] += 1
+                    
+                    if !appeared[i] && elapsedSeconds[i] == (3 + (i * 15)) {
+                        starVM.startAnimation(playIndex: i)
+                        elapsedSeconds[i] = 0
+                        appeared[i] = true
+                    }
+                    
+                    if appeared[i] && starVM.hideStar[i] && elapsedSeconds[i] == 11 {
+                        starVM.startAnimation(playIndex: i)
+                        elapsedSeconds[i] = 0
+                    }
                 }
             }
         }.onDisappear {

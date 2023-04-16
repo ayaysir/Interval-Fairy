@@ -27,7 +27,8 @@ struct StarView: View {
         .frame(width: 32, height: 32)
         .onTapGesture {
             starVM.isTapped[index] = true
-            
+            let noteAccidental = starVM.noteName[index].accidental
+            conductor.displayKey = noteAccidental == .flat ? .Db : noteAccidental == .sharp ? .C : conductor.displayKey
             conductor.noteOn(pitch: Pitch(starVM.noteName[index].noteNumber), point: .zero)
             
             Timer.scheduledTimer(withTimeInterval: 1, repeats: false) { timer in

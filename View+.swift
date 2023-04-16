@@ -32,4 +32,22 @@ extension View {
             self
         }
     }
+    
+    /// 좌우 마진넣기
+    func padding(sides: [Side], value: CGFloat = 8) -> some View {
+        HStack(spacing: 0) {
+            if sides.contains(.left) {
+                Spacer().frame(width: value)
+            }
+            self
+            if sides.contains(.right) {
+                Spacer().frame(width: value)
+            }
+        }
+    }
+}
+
+enum Side: Equatable, Hashable {
+    case left
+    case right
 }
