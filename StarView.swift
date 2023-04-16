@@ -33,6 +33,7 @@ struct StarView: View {
             
             Timer.scheduledTimer(withTimeInterval: 1, repeats: false) { timer in
                 conductor.noteOff(pitch: Pitch(starVM.noteName[index].noteNumber))
+                // increase weight
                 starVM.resetValues(playIndex: index)
                 handler()
             }

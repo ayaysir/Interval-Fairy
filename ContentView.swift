@@ -37,9 +37,48 @@ class InstrumentEXSConductor: ObservableObject, HasAudioEngine {
             
             notesDescription = descBefore + " = \n..."
             if let interval = Tonic.Interval.betweenNotes(note1, note2) {
+                // 음정 판정 부분
+                // Status 조정
+                // if emergency { ... } else { adjust status }
                 intervalDescription = interval.longDescription
+                let quality = interval.longDescription.split(separator: " ")[0]
+                
                 Timer.scheduledTimer(withTimeInterval: 1, repeats: false) { [unowned self] _ in
                     notesDescription = descBefore + " = \n\(intervalDescription)"
+                    print(quality)
+                    
+                    // TODO: - Status 증가 여부를 표시 (화면 구석에 애니메이팅된 텍스트로)
+                    StatusManager.shared.discipline += 100
+                    StatusManager.shared.satiety += 100
+                    
+                    switch quality {
+                    case "Perfect":
+                        StatusManager.shared.happy -= 1000
+                        StatusManager.shared.hygiene += 5000
+                        StatusManager.shared.health += 100
+                        StatusManager.shared.perfectness += 1000
+                    case "Major":
+                        StatusManager.shared.happy += 1000
+                        StatusManager.shared.health += 100
+                    case "Minor":
+                        StatusManager.shared.happy -= 1000
+                        StatusManager.shared.health -= 100
+                    case "Augmented":
+                        StatusManager.shared.age += 40
+                        StatusManager.shared.happy -= 1000
+                        StatusManager.shared.hygiene += 5000
+                        StatusManager.shared.health -= 100
+                        StatusManager.shared.augDim += Int.random(in: 500...1000)
+                    case "Diminished":
+                        StatusManager.shared.age -= 40
+                        StatusManager.shared.happy -= 1000
+                        StatusManager.shared.health -= 100
+                        StatusManager.shared.augDim -= Int.random(in: 500...1000)
+                    default:
+                        break
+                    }
+                    
+                    StatusManager.shared.printAllStatus()
                 }
             } else {
                 Timer.scheduledTimer(withTimeInterval: 1, repeats: false) { [unowned self] _ in
@@ -191,6 +230,15 @@ struct ContentView: View {
                     ForEach(0..<5) { index in
                         StarView(conductor: conductor, starVM: starVM, index: index) {
                             elapsedSeconds[index] = 0
+                            StatusManager.shared.satiety += 1000
+                            let weight = StatusManager.shared.weight
+                            if weight == 0 {
+                                StatusManager.shared.weight = 10000
+                            } else {
+                                StatusManager.shared.weight += Int(Double(weight) * 0.1)
+                            }
+                            
+                            StatusManager.shared.printAllStatus()
                         }
                     }
                 }
@@ -238,74 +286,85 @@ struct ContentView: View {
                         .frame(height: UIScreen.main.bounds.height * 0.3)
                 }
             }
-            
+            // Popup
             if showStatusPopup {
-                VStack(alignment: .leading) {
-                    /*
-                     // visible
-                     static let stkAge = "STATUS_AGE"
-                     static let stkWeight = "STATUS_WEIGHT"
-                     static let stkDiscipline = "STATUS_DISCIPLINE"
-                     static let stkSatiety = "STATUS_SATIETY"
-                     static let stkHappy = "STATUS_HAPPY"
-                     
-                     // invisible
-                     static let stkHelath = "STATUS_HEALTH"
-                     static let sktHygiene = "STATUS_HYGIENE"
-                     static let stkPerfectness = "STATUS_PERFECTNESS"
-                     static let stkAugDim = "STATUS_AUGDIM"
-                     */
-                    HStack {
-                        Text("AGE")
-                            .font(.title)
-                        Spacer()
-                        Text("3 years")
+                ZStack {
+                    Color(red: 0, green: 0, blue: 0, opacity: 0.3)
+                    VStack(alignment: .leading) {
+                        /*
+                         // visible
+                         static let stkAge = "STATUS_AGE"
+                         static let stkWeight = "STATUS_WEIGHT"
+                         static let stkDiscipline = "STATUS_DISCIPLINE"
+                         static let stkSatiety = "STATUS_SATIETY"
+                         static let stkHappy = "STATUS_HAPPY"
+                         
+                         // invisible
+                         static let stkHelath = "STATUS_HEALTH"
+                         static let sktHygiene = "STATUS_HYGIENE"
+                         static let stkPerfectness = "STATUS_PERFECTNESS"
+                         static let stkAugDim = "STATUS_AUGDIM"
+                         */
+                        HStack {
+                            Text("AGE")
+                                .font(.title)
+                            Spacer()
+                            Text(StatusManager.shared.ageDescription)
+                        }
+                        .padding(20)
+                        Divider()
+                        HStack {
+                            Text("WEIGHT")
+                                .font(.title)
+                            Spacer()
+                            Text(StatusManager.shared.weightDescription)
+                                
+                        }
+                        .padding(20)
+                        Divider()
+                        HStack {
+                            Text("DISCIPLINE")
+                                .font(.title)
+                            Spacer()
+                            ProgressView(value: Double(StatusManager.shared.discipline), total: 10000)
+                                .progressViewStyle(.linear)
+                                .frame(width: 300)
+                        }
+                        .padding(20)
+                        Divider()
+                        HStack {
+                            Text("HUNGRY")
+                                .font(.title)
+                            Spacer()
+                            ProgressView(value: Double(StatusManager.shared.satiety), total: 10000)
+                                .progressViewStyle(.linear)
+                                .frame(width: 300)
+                        }
+                        .padding(20)
+                        Divider()
+                        HStack {
+                            Text("HAPPY")
+                                .font(.title)
+                            Spacer()
+                            ProgressView(value: Double(StatusManager.shared.happy), total: 10000)
+                                .progressViewStyle(.linear)
+                                .frame(width: 300)
+                        }
+                        .padding(20)
                     }
-                    .padding(20)
-                    Divider()
-                    HStack {
-                        Text("WEIGHT")
-                            .font(.title)
-                        Spacer()
-                        Text("30 gram")
-                            
+                    .background(.white)
+                    .cornerRadius(15)
+                    .frame(minWidth: 0, idealWidth: 750, maxWidth: 750, minHeight: 0)
+                    .shadow(radius: 10)
+                    .onTapGesture {
+                        print("위에")
                     }
-                    .padding(20)
-                    Divider()
-                    HStack {
-                        Text("DISCIPLINE")
-                            .font(.title)
-                        Spacer()
-                        ProgressView(value: 3000, total: 10000)
-                            .progressViewStyle(.linear)
-                            .frame(width: 300)
-                    }
-                    .padding(20)
-                    Divider()
-                    HStack {
-                        Text("HUNGRY")
-                            .font(.title)
-                        Spacer()
-                        ProgressView(value: 5000, total: 10000)
-                            .progressViewStyle(.linear)
-                            .frame(width: 300)
-                    }
-                    .padding(20)
-                    Divider()
-                    HStack {
-                        Text("HAPPY")
-                            .font(.title)
-                        Spacer()
-                        ProgressView(value: 7000, total: 10000)
-                            .progressViewStyle(.linear)
-                            .frame(width: 300)
-                    }
-                    .padding(20)
                 }
-                .background(.white)
-                .cornerRadius(15)
-                .frame(minWidth: 0, idealWidth: 750, maxWidth: 750, minHeight: 0)
-                .shadow(radius: 10)
+                .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height * 1.2)
+                .onTapGesture {
+                    print("오버레이")
+                    showStatusPopup = false
+                }
             }
             
         } // Root Zstack End

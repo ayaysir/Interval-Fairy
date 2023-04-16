@@ -27,10 +27,10 @@ import Foundation
  * age(표기 단수, 내부 10000) => 시간이 지나거나, aug/dim을 누르면 해당 도수만큼 증감
   max: 10000
   1분당 8씩 증가
-  aug당 40씩 증가
-  dim당 20씩 감소
+  증음정당 40씩 증가
+  감음정당 20씩 감소
  
- * 무게(표기: g, 내부: mg) => 기본 10g, 간식을 먹으면 10% 증가, 시간이 지나거나 게임을 하면 감소
+ * 무게(표기: g, 내부: mg) => 기본 10g, 간식(별)을 먹으면 10% 증가, 시간이 지나거나 게임을 하면 감소
   max: 100,000
   age별 기본값: 10000, 20000, 30000, 40000, 50000, 70000, 100000, 150000, 200000, 500000
   1분당 0.02% 감소
@@ -40,10 +40,12 @@ import Foundation
  * Discipline => 시간 지나면 일정 부분 감소하고, 무게, 행복, 배고픔에 복합적으로 영향받음
   max: 10000(높을수록 규율적임)
   기본 1분당 15 감소
-  음정 페어 맞추면 5 증가
   과체중시 5 추가 감소
   행복 max값인 경우 10 추가 감소, 행복값에 비례
   배고픔 수치에 따라 최대 10 추가 감소, 배고픔 값에 비례
+ 
+  음정 페어 맞추면 100 증가
+ 
   말안들음: 3000 이하 (모든 명령이 안먹힘 => 미션으로 해결)
  
  * Satiety => 포만감, 시간 지나거나 게임을 하면 배고픔
@@ -52,6 +54,7 @@ import Foundation
    기본 1분당 30 감소
    과체중시 10 추가 감소
    행복 max값인 경우 10 증가, 행복값에 비례
+ 
    게임 시 1000 감소
    별 먹기: 1000 증가
    음정 페어 맞추면 100 증가
@@ -59,8 +62,8 @@ import Foundation
    
  * Happy => 장/단 음정에 따라 증감, 게임에서 이기면 증가
    max: 10000 (높을수록 행복함)
-   장음정/완전음정 맞추면 1000 증가
-   단음정/증음정/감음정 맞추면 1000 감소
+   장음정/ 맞추면 1000 증가
+   완전음정/단음정/증음정/감음정 맞추면 1000 감소
    게임에서 승리 시 6000 증가 / 패배 시 3000 감소
    
  (invisible parameter)
@@ -69,22 +72,22 @@ import Foundation
    기본 1분당 10 감소
    간식 먹으면 1000 감소
    게임 하면 2000 감소
-   증음정 맞추면 5000 증가
+   완전/증음정 맞추면 5000 증가
    감음정 맞추면 1000 감소
-   말안들음: 2000 이하 (증음정 외에 모든 명령이 안먹힘)
+   말안들음: 2000 이하 (완전/증음정 외에 모든 명령이 안먹힘)
   
  * 건강 => 시간에 따라 병걸림 + 과체중인 경우 확률 증가 + 무게, 행복, 배고픔에 복합적으로 영향받음
    max: 10000 (높을수록 건강함)
    기본 1분당 10 감소
    간식 먹으면 100 감소
    게임 하면 50 감소
-   단음정 맞추면 100 감소
-   감음정 맞추면 200 증가
+   증음/단음정 맞추면 100 감소
+   장/감음정 맞추면 200 증가
    완전음정 맞추면 100 증가
  
  * Perfectness
    max: 10000
-   완전음정 맞추면 200 ~ 1000 랜덤 증가
+   완전음정 맞추면 1000 증가
    그 외의 음정 맞추면 100 ~ 500 랜덤 감소
    시간 영향 없음
  
@@ -95,8 +98,29 @@ import Foundation
    시간 영향 없음
  
  장단 => 감정, 표정의 여부 => happy
+ 장
+  - Happy +1000
+  - health +100
+ 단
+  - happy -1000
+  - health -100
  왼전 => 다마고치의 형태가 더 그럴싸해짐(찌그러지지 않음) (대략 5단계) =>
+  - Happy -1000
+  - hygiene +5000
+  - health +100
+  - perfectness +1000
  증감 => 나이의 증감 및 장식의 증감(계절, 나무, age와는 별개)
+ 증
+  - age +40
+  - happy -1000
+  - hygiene +5000
+  - health -100
+  - augDim +(500~1000)
+ 단
+  - age -40
+  - happy -1000
+  - health -100
+  - augDim -(500~1000)
 
  파라미터 (invisible)
  */
@@ -131,6 +155,9 @@ class StatusManager {
             localStorage.set(limitValue(newValue, max: 10000), forKey: .stkAge)
         }
     }
+    var ageDescription: String {
+        return "\(age / 1000) years"
+    }
     
     var weight: Int {
         get {
@@ -138,6 +165,9 @@ class StatusManager {
         } set {
             localStorage.set(limitValue(newValue, max: 100000), forKey: .stkWeight)
         }
+    }
+    var weightDescription: String {
+        return "\(weight / 1000) gram"
     }
     
     var discipline: Int {
@@ -194,5 +224,24 @@ class StatusManager {
         } set {
             localStorage.set(limitValue(newValue, max: 10000), forKey: .stkAugDim)
         }
+    }
+    
+    func printAllStatus() {
+        print(
+            """
+            // visible
+            stkAge = \(age)
+            stkWeight = \(weight)
+            stkDiscipline = \(discipline)
+            stkSatiety = \(satiety)
+            stkHappy = \(happy)
+                
+            // invisible
+            static let stkHelath = \(health)
+            static let stkHygiene = \(hygiene)
+            static let stkPerfectness = \(perfectness)
+            static let stkAugDim = \(augDim)
+            """
+        )
     }
 }
