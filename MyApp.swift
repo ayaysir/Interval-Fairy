@@ -19,6 +19,8 @@ struct MyApp: App {
         //
         // }
         print("MyApp: init ========")
+        
+        FontManager.registerFonts()
     }
     
     var body: some Scene {

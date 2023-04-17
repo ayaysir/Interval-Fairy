@@ -274,9 +274,9 @@ class StatusManager {
         //  과체중시 5 추가 감소
         //  행복 max값인 경우 10 추가 감소, 행복값에 비례
         //  배고픔 수치에 따라 최대 10 추가 감소, 배고픔 값에 비례
-        discipline += Int(elapsedMinute * 15)
+        discipline -= Int(elapsedMinute * 15)
         if isFat {
-            discipline += Int(elapsedMinute * 5)
+            discipline -= Int(elapsedMinute * 5)
         }
         discipline -= Int(elapsedMinute) * (happy / 10000) * 10
         discipline -= Int(elapsedMinute) * (1 - satiety / 10000) * 10

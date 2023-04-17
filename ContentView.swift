@@ -10,22 +10,42 @@ class InstrumentEXSConductor: ObservableObject, HasAudioEngine {
     var instrument = MIDISampler(name: "Instrument 1")
     var displayKey: Key = .C
     @Published var intervalDescription: String = ""
-    @Published var notesDescription: String = ""
+    @Published var notesDescription: String = "" {
+        didSet {
+            showAndHideDescription()
+        }
+    }
+    @Published var isIntervalCalculated: Bool = false
+    @Published var showDescription: Bool = false
+    private var descriptionTimer: Timer?
     
     private(set) var note1: Note?
     private(set) var note2: Note?
+    
+    func playTwoNotes() {
+        if let note1 = note1, let note2 = note2 {
+            instrument.play(noteNumber: MIDINoteNumber(note1.pitch.midiNoteNumber), velocity: 90, channel: 1)
+            instrument.play(noteNumber: MIDINoteNumber(note2.pitch.midiNoteNumber), velocity: 90, channel: 1)
+            
+            Timer.scheduledTimer(withTimeInterval: 1, repeats: false) { [unowned self] _ in
+                instrument.stop(noteNumber: MIDINoteNumber(note1.pitch.midiNoteNumber), channel: 1)
+                instrument.stop(noteNumber: MIDINoteNumber(note2.pitch.midiNoteNumber), channel: 1)
+            }
+        }
+    }
 
     func noteOn(pitch: Pitch, point _: CGPoint) {
-        // print(Date(), MusicNote.fromMIDINoteNumber(pitch.midiNoteNumber))
+        isIntervalCalculated = false
         instrument.play(noteNumber: MIDINoteNumber(pitch.midiNoteNumber), velocity: 90, channel: 0)
-        if note1 == nil {
+        
+        if note1 == nil || (note1 != nil && note2 != nil) {
             note1 = Note(pitch: Pitch(pitch.midiNoteNumber), key: displayKey)
+            note2 = nil
             notesDescription = note1!.description
-        } else if note2 == nil {
+        } else if note1 != nil && note2 == nil {
             note2 = Note(pitch: Pitch(pitch.midiNoteNumber), key: displayKey)
             notesDescription = "\(note1!.description) and \(note2!.description)"
         }
-        
     }
 
     func noteOff(pitch: Pitch) {
@@ -43,7 +63,7 @@ class InstrumentEXSConductor: ObservableObject, HasAudioEngine {
                 let quality = interval.longDescription.split(separator: " ")[0]
                 
                 notesDescription = descBefore + " = \n\(intervalDescription)"
-                print(quality)
+                isIntervalCalculated = true
                 
                 // TODO: - Status 증가 여부를 표시 (화면 구석에 애니메이팅된 텍스트로)
                 StatusManager.shared.discipline += 100
@@ -78,10 +98,10 @@ class InstrumentEXSConductor: ObservableObject, HasAudioEngine {
                 
                 // StatusManager.shared.printAllStatus()
             } else {
-                notesDescription = descBefore + " = \n?"
+                notesDescription = descBefore + " = \n? (Too difficult to me.)"
             }
-            self.note1 = nil
-            self.note2 = nil
+            // self.note1 = nil
+            // self.note2 = nil
         }
     }
 
@@ -103,6 +123,14 @@ class InstrumentEXSConductor: ObservableObject, HasAudioEngine {
         } catch {
             Log("AudioKit did not start!")
         }
+    }
+    
+    private func showAndHideDescription() {
+        showDescription = true
+        descriptionTimer?.invalidate()
+        descriptionTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: false, block: { _ in
+            self.showDescription = false
+        })
     }
 }
 
@@ -209,17 +237,35 @@ struct ContentView: View {
                             .fill(.cyan)
                             
                         // Balloon
-                        if !conductor.notesDescription.isEmpty {
+                        if !conductor.notesDescription.isEmpty && conductor.showDescription {
                             ZStack(alignment: .topLeading) {
                                 // RoundedRectangle(cornerSize: CGSize(width: 10, height: 10))
                                 //     .fill(.white)
                                 Image("balloon")
                                     .resizable()
-                                Text(conductor.notesDescription)
-                                    .offset(x: 25, y: 15)
+                                VStack(alignment: .leading) {
+                                    Text(conductor.notesDescription)
+                                        .font(.custom("NeoDunggeunmoPro-Regular", size: 36))
+                                    Spacer().frame(height: 10)
+                                    if conductor.isIntervalCalculated {
+                                        HStack {
+                                            Button {
+                                                conductor.playTwoNotes()
+                                            } label: {
+                                                Image(systemName: "speaker.wave.3.fill")
+                                            }
+                                            Button {
+                                                
+                                            } label: {
+                                                Text("View Detail")
+                                            }
+                                        }
+                                    }
+                                }.offset(x: 80, y: 36)
+                                
                             }
-                            .offset(x: 100, y: -300)
-                            .frame(width: 150, height: 100)
+                            .offset(x: 200, y: -300)
+                            .frame(width: 400, height: 300)
                         }
                         
                         // Tamagotchi

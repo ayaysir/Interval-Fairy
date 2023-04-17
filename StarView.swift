@@ -31,9 +31,12 @@ struct StarView: View {
             conductor.displayKey = noteAccidental == .flat ? .Db : noteAccidental == .sharp ? .C : conductor.displayKey
             conductor.noteOn(pitch: Pitch(starVM.noteName[index].noteNumber), point: .zero)
             
-            conductor.noteOff(pitch: Pitch(starVM.noteName[index].noteNumber))
-            starVM.resetValues(playIndex: index)
-            handler()
+            Timer.scheduledTimer(withTimeInterval: 1, repeats: false) { timer in
+                conductor.noteOff(pitch: Pitch(starVM.noteName[index].noteNumber))
+                // increase weight
+                starVM.resetValues(playIndex: index)
+                handler()
+            }
         }
         .isHidden(starVM.hideStar[index])
     }
