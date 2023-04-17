@@ -11,6 +11,7 @@ public struct FontManager {
     /// https://stackoverflow.com/questions/71916171/how-to-change-font-in-xcode-swift-playgrounds-swiftpm-project
     public static func registerFonts() {
         registerFont(bundle: Bundle.main, fontName: "NeoDunggeunmoPro-Regular", fontExtension: ".ttf") //change according to your ext.
+        registerFont(bundle: Bundle.main, fontName: "Musiqwik-rvL8", fontExtension: ".ttf")
     }
     
     fileprivate static func registerFont(bundle: Bundle, fontName: String, fontExtension: String) {
@@ -24,5 +25,15 @@ public struct FontManager {
         var error: Unmanaged<CFError>?
         
         CTFontManagerRegisterGraphicsFont(font, &error)
+    }
+}
+
+func viewFontList() {
+    for family in UIFont.familyNames {
+        print("\(family)")
+
+        for name in UIFont.fontNames(forFamilyName: family) {
+            print("   \(name)")
+        }
     }
 }

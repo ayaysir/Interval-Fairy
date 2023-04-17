@@ -22,4 +22,8 @@ public extension Note {
         let index = Int.random(in: 0..<notes.count)
         return notes[index]
     }
+    
+    var musiqwik: String {
+        noteToMusiqwik(self)
+    }
 }
