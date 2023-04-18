@@ -17,4 +17,8 @@ public extension Key {
         let accidental = self.root.accidental.rawValue
         return Int8(baseNote(baseIndex)) + accidental
     }
+    
+    var textValue: String {
+        return "\(self.root.description)"
+    }
 }

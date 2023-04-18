@@ -1,4 +1,5 @@
 import SwiftUI
+import AVFoundation
 
 @main
 struct MyApp: App {
@@ -21,6 +22,14 @@ struct MyApp: App {
         print("MyApp: init ========")
         
         FontManager.registerFonts()
+        
+        // 무음모드에서 소리가 나게 하기
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch {
+            // print error...
+        }
     }
     
     var body: some Scene {

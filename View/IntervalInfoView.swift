@@ -13,6 +13,7 @@ struct IntervalInfoView: View {
     @State var note1: Note
     @State var note2: Note
     @State var baseNotes: [String] = []
+    @State private var baseNotesDescription = ""
     
     @State private var interval: Tonic.Interval?
     // @State private var defaultInterval: Tonic.Interval?
@@ -22,6 +23,8 @@ struct IntervalInfoView: View {
     
     @Environment(\.dismiss) var dismiss
     @StateObject var conductor: InstrumentEXSConductor
+    
+    @State var showLeftPlayButton = true
     
     var lowerNote: Note {
         return note1.noteNumber < note2.noteNumber ? note1 : note2
@@ -66,12 +69,13 @@ struct IntervalInfoView: View {
                             Text("Error")
                         }
                     }
-                    Button {
-                        conductor.playTwoNotes()
-                    } label: {
-                        Image(systemName: "play.fill")
+                    if showLeftPlayButton {
+                        Button {
+                            conductor.playTwoNotes()
+                        } label: {
+                            Image(systemName: "play.fill")
+                        }
                     }
-
                 }
                 VStack {
                     Text("'&\(note1.musiqwik)\(note2.musiqwik)=!")
@@ -87,7 +91,7 @@ struct IntervalInfoView: View {
                 VStack(alignment: .leading) {
                     Text("Why \(title)?").font(.title2)
                     VStack(alignment: .leading) {
-                        Text("1. Counting the size between the low and high notes equals \(interval.number). (\(baseNotes.joined(separator: ", ")))")
+                        Text("1. Counting the size between the low and high notes equals \(interval.number). ")
                         Text("  - The number of an interval is the number of letter names or staff positions (lines and spaces) it encompasses, including the positions of both notes forming the interval. ").font(.footnote)
                         Image("LineAndSpace")
                             .resizable()
@@ -120,7 +124,8 @@ struct IntervalInfoView: View {
                     dismiss()
                 } label: {
                     Text("OK, Got it!")
-                }
+                        
+                }.buttonStyle(.borderedProminent)
             }
             
         }.onAppear {
@@ -130,8 +135,17 @@ struct IntervalInfoView: View {
                 title = interval.longDescription
                 let isAscending = note1.noteNumber < note2.noteNumber
                 self.baseNotes = baseNoteList(interval: interval, startLetter: isAscending ? note1.letter : note2.letter)
+                
                 if !isAscending {
                     self.baseNotes.reverse()
+                }
+                
+                if self.baseNotes.count > 0 {
+                    self.baseNotesDescription = "(\(baseNotes.joined(separator: ", ")))"
+                }
+                
+                if interval.number == 1 {
+                    showLeftPlayButton = false
                 }
                 
                 // default interval
@@ -153,7 +167,6 @@ struct IntervalInfoView: View {
                         break
                     }
                 }
-                
             }
         }
         .padding(sides: [.left, .right], value: 20)

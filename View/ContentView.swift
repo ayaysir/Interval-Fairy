@@ -81,7 +81,9 @@ struct ContentView: View {
                                     .resizable()
                                 VStack(alignment: .leading) {
                                     Text(conductor.notesDescription)
-                                        .font(.custom("NeoDunggeunmoPro-Regular", size: 36))
+                                        .font(.system(size: 30, weight: .bold))
+                                        // 글씨를 알아보기 어려움
+                                        // .font(.custom("NeoDunggeunmoPro-Regular", size: 36))
                                     Spacer().frame(height: 10)
                                     if conductor.isIntervalCalculated {
                                         HStack {
@@ -89,18 +91,20 @@ struct ContentView: View {
                                                 conductor.playTwoNotes()
                                             } label: {
                                                 Image(systemName: "speaker.wave.3.fill")
+                                                    .font(.title)
                                             }
                                             Button {
                                                 showIntervalInfo = true
                                             } label: {
                                                 Text("View Detail")
+                                                    .font(.title)
                                             }
                                         }
                                     }
-                                }.offset(x: 80, y: 36)
+                                }.offset(x: 70, y: 45)
                                 
                             }
-                            .offset(x: 200, y: -300)
+                            .offset(x: 250, y: -400)
                             .frame(width: 400, height: 300)
                         }
                         
@@ -130,31 +134,40 @@ struct ContentView: View {
                 
                 VStack(spacing: 0) {
                     ZStack {
-                        Color.orange
+                        Color(red: 0.8, green: 0.8, blue: 0.8)
+                        // Toolbar
                         HStack {
                             Spacer()
-                            Text(conductor.intervalDescription)
                             Button("Toggle Sharp/Flat") {
                                 isDisplayFlat.toggle()
                                 conductor.displayKey = keyList[keyTextIndex]
                             }
+                            .buttonStyle(.borderedProminent)
+                            .tint(.orange)
                             Button("-") {
                                 guard currentKeyIndex > 0 else {
                                     return
                                 }
                                 currentKeyIndex -= 1
+                                isDisplayFlat = false
                             }
-                            Button("C") {
+                            .buttonStyle(.borderedProminent)
+                            Button("\(keyList[currentKeyIndex].textValue)") {
                                 currentKeyIndex = 0
+                                isDisplayFlat = false
                             }
+                            .buttonStyle(.borderedProminent)
                             Button("+") {
                                 guard currentKeyIndex < keyList.count - 1 else {
                                     return
                                 }
                                 currentKeyIndex += 1
+                                isDisplayFlat = false
                             }
-                        }
+                            .buttonStyle(.borderedProminent)
+                        }.padding(sides: [.left, .right], value: 10)
                     }
+                    
                     Keyboard(
                         layout: .piano(
                             pitchRange: Pitch(60 + keyList[currentKeyIndex].number) ... Pitch(72 + keyList[currentKeyIndex].number)),
@@ -169,8 +182,10 @@ struct ContentView: View {
                         .shadow(radius: 5)
                         .frame(height: UIScreen.main.bounds.height * 0.3)
                 }
+               
             }
             .blur(radius: blurMainArea ? 20 : 0)
+            
             // Popup
             if showStatusPopup {
                 ZStack {
