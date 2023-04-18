@@ -319,4 +319,102 @@ class StatusManager {
         let baseWeight = baseWeights[displayedAge]
         return weight * 2 <= baseWeight
     }
+
+    private func updateStatusWithTextResult(status: KeyPath<StatusManager, Int>, value: Int) -> String {
+        switch status {
+        case \.age:
+            age += value
+            return "Age \(value.signum() > 0 ? "+" : "-")\(value)"
+        case \.weight:
+            weight += value
+            return "Weight \(value.signum() > 0 ? "+" : "-")\(value)"
+        case \.augDim:
+            augDim += value
+            return "AugDim \(value.signum() > 0 ? "+" : "-")\(value)"
+        case \.discipline:
+            discipline += value
+            return "Discipline \(value.signum() > 0 ? "+" : "-")\(value)"
+        case \.satiety:
+            satiety += value
+            return "Satiety \(value.signum() > 0 ? "+" : "-")\(value)"
+        case \.happy:
+            happy += value
+            return "Happy \(value.signum() > 0 ? "+" : "-")\(value)"
+        case \.health:
+            health += value
+            return "Health \(value.signum() > 0 ? "+" : "-")\(value)"
+        case \.hygiene:
+            hygiene += value
+            return "Hygiene \(value.signum() > 0 ? "+" : "-")\(value)"
+        case \.perfectness:
+            perfectness += value
+            return "Perfectness \(value.signum() > 0 ? "+" : "-")\(value)"
+        default:
+            return "Error"
+        }
+    }
+    
+    func updateStatusWithTextResults(quality: String.SubSequence) -> String {
+        switch quality {
+        case "Perfect":
+            happy -= 1000
+            hygiene += 5000
+            health += 100
+            perfectness += 1000
+            
+            return """
+            happy -= 1000
+            hygiene += 5000
+            health += 100
+            perfectness += 1000
+            """
+        case "Major":
+            let happyValue = Int.random(in: 1000...2000)
+            happy += happyValue
+            health += 100
+            
+            return """
+            happy += \(happyValue)
+            health += 100
+            """
+        case "Minor":
+            happy -= 1000
+            health -= 100
+            
+            return """
+            happy -= 1000
+            health -= 100
+            """
+        case "Augmented":
+            age += 40
+            happy -= 1000
+            hygiene += 5000
+            health -= 100
+            let augDimValue = Int.random(in: 500...1000)
+            augDim += augDimValue
+            
+            return """
+            age += 40
+            happy -= 1000
+            hygiene += 5000
+            health -= 100
+            augDim += \(augDimValue)
+            """
+        case "Diminished":
+            age -= 40
+            happy -= 1000
+            health -= 100
+            let augDimValue = Int.random(in: 500...1000)
+            augDim += augDimValue
+            
+            return """
+            age -= 40
+            happy -= 1000
+            health -= 100
+            augDim -= \(augDimValue)
+            """
+        default:
+            return ""
+        }
+    }
 }

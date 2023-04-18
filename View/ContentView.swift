@@ -28,6 +28,8 @@ struct ContentView: View {
     @Environment(\.scenePhase) var scenePhase
     
     @State var showIntervalInfo = false
+    @State var showStatusAnimation = false
+    @State var showStatusTextTimer: Timer?
     
     private var keyTextIndex: Int {
         if currentKeyIndex == keyList.count - 1 {
@@ -56,7 +58,7 @@ struct ContentView: View {
                         Label("Help", systemImage: "questionmark.circle.fill")
                     }
                     Button {
-                        
+                        showStatusAnimation = false
                     } label: {
                         Image(systemName: "gearshape.fill")
                     }
@@ -64,14 +66,29 @@ struct ContentView: View {
                 
                 Spacer()
                 
+                // Tamagotchi area
                 ZStack(alignment: .top) {
                     // 밑으로 갈수록 z-index 높음
+                    
                     // Rect Area
                     ZStack(alignment: .bottom) {
                         // Background
-                        Rectangle()
-                            .fill(.cyan)
+                        ZStack(alignment: .topLeading) {
+                            Rectangle()
+                                .fill(.cyan)
                             
+                            // status change popover
+                            if showStatusAnimation {
+                                Text(conductor.statusUpdateText)
+                                .offset(x: 20, y: 20)
+                                .font(.custom("NeoDunggeunmoPro-Regular", size: 30))
+                                .foregroundColor(.white)
+                                .multilineTextAlignment(.leading)
+                                // animation
+                                
+                            }
+                        }
+                        
                         // Balloon
                         if !conductor.notesDescription.isEmpty && conductor.showDescription {
                             ZStack(alignment: .topLeading) {
@@ -152,9 +169,12 @@ struct ContentView: View {
                                 isDisplayFlat = false
                             }
                             .buttonStyle(.borderedProminent)
-                            Button("\(keyList[currentKeyIndex].textValue)") {
+                            Button {
                                 currentKeyIndex = 0
                                 isDisplayFlat = false
+                            } label: {
+                                Text("\(keyList[currentKeyIndex].textValue)")
+                                    .frame(width: 80)
                             }
                             .buttonStyle(.borderedProminent)
                             Button("+") {
@@ -285,8 +305,7 @@ struct ContentView: View {
             print("ContentView: OnAppear ========")
             conductor.start()
             print(Bundle.main)
-            
-            // StatusManager.shared.calculate(startDate: Date(timeIntervalSince1970: 1681653643))
+            showStatusAnimation = true
             
             tamagotchiMovingVM.moveNormal()
             /*
@@ -340,7 +359,13 @@ struct ContentView: View {
             } else {
                 Text("Interval Error")
             }
+        }.onReceive(conductor.$statusUpdateText) { output in
+            showStatusAnimation = true
+            showStatusTextTimer?.invalidate()
             
+            showStatusTextTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: false) { _ in
+                self.showStatusAnimation = false
+            }
         }
     }
     

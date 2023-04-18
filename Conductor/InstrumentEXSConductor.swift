@@ -26,6 +26,8 @@ class InstrumentEXSConductor: ObservableObject, HasAudioEngine {
     private(set) var note1: Note?
     private(set) var note2: Note?
     
+    @Published var statusUpdateText: String = ""
+    
     func playTwoNotes() {
         if let note1 = note1, let note2 = note2 {
             instrument.stop()
@@ -90,32 +92,36 @@ class InstrumentEXSConductor: ObservableObject, HasAudioEngine {
                 StatusManager.shared.discipline += 100
                 StatusManager.shared.satiety += 100
                 
-                switch quality {
-                case "Perfect":
-                    StatusManager.shared.happy -= 1000
-                    StatusManager.shared.hygiene += 5000
-                    StatusManager.shared.health += 100
-                    StatusManager.shared.perfectness += 1000
-                case "Major":
-                    StatusManager.shared.happy += Int.random(in: 1000...2000)
-                    StatusManager.shared.health += 100
-                case "Minor":
-                    StatusManager.shared.happy -= 1000
-                    StatusManager.shared.health -= 100
-                case "Augmented":
-                    StatusManager.shared.age += 40
-                    StatusManager.shared.happy -= 1000
-                    StatusManager.shared.hygiene += 5000
-                    StatusManager.shared.health -= 100
-                    StatusManager.shared.augDim += Int.random(in: 500...1000)
-                case "Diminished":
-                    StatusManager.shared.age -= 40
-                    StatusManager.shared.happy -= 1000
-                    StatusManager.shared.health -= 100
-                    StatusManager.shared.augDim -= Int.random(in: 500...1000)
-                default:
-                    break
-                }
+                // switch quality {
+                // case "Perfect":
+                //     StatusManager.shared.happy -= 1000
+                //     StatusManager.shared.hygiene += 5000
+                //     StatusManager.shared.health += 100
+                //     StatusManager.shared.perfectness += 1000
+                // case "Major":
+                //     StatusManager.shared.happy += Int.random(in: 1000...2000)
+                //     StatusManager.shared.health += 100
+                // case "Minor":
+                //     StatusManager.shared.happy -= 1000
+                //     StatusManager.shared.health -= 100
+                // case "Augmented":
+                //     StatusManager.shared.age += 40
+                //     StatusManager.shared.happy -= 1000
+                //     StatusManager.shared.hygiene += 5000
+                //     StatusManager.shared.health -= 100
+                //     StatusManager.shared.augDim += Int.random(in: 500...1000)
+                // case "Diminished":
+                //     StatusManager.shared.age -= 40
+                //     StatusManager.shared.happy -= 1000
+                //     StatusManager.shared.health -= 100
+                //     StatusManager.shared.augDim -= Int.random(in: 500...1000)
+                // default:
+                //     break
+                // }
+                
+                statusUpdateText = StatusManager.shared.updateStatusWithTextResults(quality: quality)
+                    .replacingOccurrences(of: "= ", with: "")
+                    .capitalized
                 
                 // StatusManager.shared.printAllStatus()
             } else {
