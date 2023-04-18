@@ -270,7 +270,6 @@ struct ContentView: View {
             print("ContentView: OnAppear ========")
             conductor.start()
             print(Bundle.main)
-            print(viewFontList())
             
             // StatusManager.shared.calculate(startDate: Date(timeIntervalSince1970: 1681653643))
             
@@ -322,7 +321,7 @@ struct ContentView: View {
             }
         }.sheet(isPresented: $showIntervalInfo) {
             if let note1 = conductor.note1, let note2 = conductor.note2 {
-                IntervalInfoView(note1: note1, note2: note2)
+                IntervalInfoView(note1: note1, note2: note2, conductor: conductor)
             } else {
                 Text("Interval Error")
             }

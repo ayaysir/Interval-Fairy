@@ -28,11 +28,28 @@ class InstrumentEXSConductor: ObservableObject, HasAudioEngine {
     
     func playTwoNotes() {
         if let note1 = note1, let note2 = note2 {
+            instrument.stop()
             instrument.play(noteNumber: MIDINoteNumber(note1.pitch.midiNoteNumber), velocity: 90, channel: 1)
             instrument.play(noteNumber: MIDINoteNumber(note2.pitch.midiNoteNumber), velocity: 90, channel: 1)
             
             Timer.scheduledTimer(withTimeInterval: 1, repeats: false) { [unowned self] _ in
                 instrument.stop(noteNumber: MIDINoteNumber(note1.pitch.midiNoteNumber), channel: 1)
+                instrument.stop(noteNumber: MIDINoteNumber(note2.pitch.midiNoteNumber), channel: 1)
+            }
+        }
+    }
+    
+    func playTwoNotesHorizontally() {
+        if let note1 = note1, let note2 = note2 {
+            instrument.stop()
+            instrument.play(noteNumber: MIDINoteNumber(note1.pitch.midiNoteNumber), velocity: 90, channel: 1)
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(600)) { [unowned self] in
+                instrument.stop(noteNumber: MIDINoteNumber(note1.pitch.midiNoteNumber), channel: 1)
+                instrument.play(noteNumber: MIDINoteNumber(note2.pitch.midiNoteNumber), velocity: 90, channel: 1)
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(1200)) { [unowned self] in
                 instrument.stop(noteNumber: MIDINoteNumber(note2.pitch.midiNoteNumber), channel: 1)
             }
         }

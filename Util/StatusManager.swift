@@ -259,8 +259,8 @@ class StatusManager {
         
         let elapsedMinute = (now.timeIntervalSince1970 - startDate.timeIntervalSince1970) / 60.0
         
-        print("Before:")
-        printAllStatus()
+        // print("Before:")
+        // printAllStatus()
         // * age
         //   - 1분당 8씩 증가 => 10씩 증가
         age += Int(elapsedMinute * 10)
@@ -310,8 +310,8 @@ class StatusManager {
         // augdim
         // X
         
-        print("After:")
-        printAllStatus()
+        // print("After:")
+        // printAllStatus()
     }
     
     var isFat: Bool {
