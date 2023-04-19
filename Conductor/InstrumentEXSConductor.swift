@@ -89,7 +89,7 @@ class InstrumentEXSConductor: ObservableObject, HasAudioEngine {
                 isIntervalCalculated = true
                 
                 // TODO: - Status 증가 여부를 표시 (화면 구석에 애니메이팅된 텍스트로)
-                StatusManager.shared.discipline += 100
+                StatusManager.shared.discipline += 1000
                 StatusManager.shared.satiety += 100
                 
                 // switch quality {

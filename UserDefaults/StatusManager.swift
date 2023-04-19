@@ -181,6 +181,9 @@ class StatusManager {
             localStorage.set(limitValue(newValue, max: 10000), forKey: .stkDiscipline)
         }
     }
+    var isNeedDiscipline: Bool {
+        discipline < 3000
+    }
     
     var satiety: Int {
         get {
@@ -188,6 +191,9 @@ class StatusManager {
         } set {
             localStorage.set(limitValue(newValue, max: 10000), forKey: .stkSatiety)
         }
+    }
+    var isNeedSatiety: Bool {
+        satiety < 3000
     }
     
     var happy: Int {
@@ -197,6 +203,9 @@ class StatusManager {
             localStorage.set(limitValue(newValue, max: 10000), forKey: .stkHappy)
         }
     }
+    var isNeedHappy: Bool {
+        happy < 7000
+    }
     
     var health: Int {
         get {
@@ -205,6 +214,9 @@ class StatusManager {
             localStorage.set(limitValue(newValue, max: 10000), forKey: .stkHelath)
         }
     }
+    var isNeedHealth: Bool {
+        health <= 0
+    }
     
     var hygiene: Int {
         get {
@@ -212,6 +224,9 @@ class StatusManager {
         } set {
             localStorage.set(limitValue(newValue, max: 10000), forKey: .stkHygiene)
         }
+    }
+    var isNeedHygiene: Bool {
+        hygiene <= 0
     }
     
     var perfectness: Int {

@@ -31,6 +31,18 @@ struct ContentView: View {
     @State var showStatusAnimation = false
     @State var showStatusTextTimer: Timer?
     
+    @State private var gradient = LinearGradient(
+        gradient: Gradient(colors: [.green, .blue]),
+        startPoint: .top,
+        endPoint: .bottom
+    )
+    
+    @State private var isNeedDiscipline: Bool = false
+    @State private var isNeedSatiety: Bool = false
+    @State private var isNeedHappy: Bool = false
+    @State private var isNeedHealth: Bool = false
+    @State private var isNeedHygiene: Bool = false
+    
     private var keyTextIndex: Int {
         if currentKeyIndex == keyList.count - 1 {
             return currentKeyIndex + (isDisplayFlat ? -1 : 0)
@@ -154,6 +166,16 @@ struct ContentView: View {
                         Color(red: 0.8, green: 0.8, blue: 0.8)
                         // Toolbar
                         HStack {
+                            Image(systemName: "face.smiling")
+                                .foregroundColor(isNeedHappy ? .black :  Color(white: 0.7))
+                            Image(systemName: "fork.knife")
+                                .foregroundColor(isNeedSatiety ? .black :  Color(white: 0.7))
+                            Image(systemName: "shower")
+                                .foregroundColor(isNeedHygiene ? .black :  Color(white: 0.7))
+                            Image(systemName: "megaphone")
+                                .foregroundColor(isNeedDiscipline ? .black :  Color(white: 0.7))
+                            Image(systemName: "medical.thermometer")
+                                .foregroundColor(isNeedHealth ? .black :  Color(white: 0.7))
                             Spacer()
                             Button("Toggle Sharp/Flat") {
                                 isDisplayFlat.toggle()
@@ -210,91 +232,85 @@ struct ContentView: View {
             if showStatusPopup {
                 ZStack {
                     Color(red: 0, green: 0, blue: 0, opacity: 0.3)
-                    VStack(alignment: .leading) {
-                        /*
-                         // visible
-                         static let stkAge = "STATUS_AGE"
-                         static let stkWeight = "STATUS_WEIGHT"
-                         static let stkDiscipline = "STATUS_DISCIPLINE"
-                         static let stkSatiety = "STATUS_SATIETY"
-                         static let stkHappy = "STATUS_HAPPY"
-                         
-                         // invisible
-                         static let stkHelath = "STATUS_HEALTH"
-                         static let sktHygiene = "STATUS_HYGIENE"
-                         static let stkPerfectness = "STATUS_PERFECTNESS"
-                         static let stkAugDim = "STATUS_AUGDIM"
-                         */
-                        VStack {
-                            HStack {
-                                Text("AGE")
-                                    .font(.title)
-                                Spacer()
-                                Text(StatusManager.shared.ageDescription)
+                    VStack {
+                        VStack(alignment: .leading) {
+                            VStack {
+                                HStack {
+                                    Text("AGE")
+                                        .font(.title)
+                                    Spacer()
+                                    Text(StatusManager.shared.ageDescription)
+                                }
+                                .padding(20)
+                                Divider()
                             }
-                            .padding(20)
-                            Divider()
-                        }
-                        VStack {
-                            HStack {
-                                Text("WEIGHT")
-                                    .font(.title)
-                                Spacer()
-                                Text(StatusManager.shared.weightDescription)
-                                    
+                            VStack {
+                                HStack {
+                                    Text("WEIGHT")
+                                        .font(.title)
+                                    Spacer()
+                                    Text(StatusManager.shared.weightDescription)
+                                        
+                                }
+                                .padding(20)
+                                Divider()
                             }
-                            .padding(20)
-                            Divider()
-                        }
-                        VStack {
-                            HStack {
-                                Text("DISCIPLINE")
-                                    .font(.title)
-                                Spacer()
-                                ProgressView(value: Double(StatusManager.shared.discipline), total: 10000)
-                                    .progressViewStyle(.linear)
-                                    .frame(width: 300)
+                            VStack {
+                                HStack {
+                                    Text("DISCIPLINE")
+                                        .font(.title)
+                                    Spacer()
+                                    ProgressView(value: Double(StatusManager.shared.discipline), total: 10000)
+                                        .progressViewStyle(GradientProgressStyle(stroke: .gray, fill: gradient))
+                                        .frame(width: 300)
+                                }
+                                .padding(20)
+                                Divider()
                             }
-                            .padding(20)
-                            Divider()
-                        }
-                        VStack {
-                            HStack {
-                                Text("HUNGRY")
-                                    .font(.title)
-                                Spacer()
-                                ProgressView(value: Double(StatusManager.shared.satiety), total: 10000)
-                                    .progressViewStyle(.linear)
-                                    .frame(width: 300)
+                            VStack {
+                                HStack {
+                                    Text("HUNGRY")
+                                        .font(.title)
+                                    Spacer()
+                                    ProgressView(value: Double(StatusManager.shared.satiety), total: 10000)
+                                        .progressViewStyle(GradientProgressStyle(stroke: .gray, fill: gradient))
+                                        .frame(width: 300)
+                                }
+                                .padding(20)
+                                Divider()
                             }
-                            .padding(20)
-                            Divider()
-                        }
-                        VStack {
-                            HStack {
-                                Text("HAPPY")
-                                    .font(.title)
-                                Spacer()
-                                ProgressView(value: Double(StatusManager.shared.happy), total: 10000)
-                                    .progressViewStyle(.linear)
-                                    .frame(width: 300)
+                            VStack {
+                                HStack {
+                                    Text("HAPPY")
+                                        .font(.title)
+                                    Spacer()
+                                    ProgressView(value: Double(StatusManager.shared.happy), total: 10000)
+                                        .progressViewStyle(GradientProgressStyle(stroke: .gray, fill: gradient))
+                                        .frame(width: 300)
+                                }
+                                .padding(20)
+                                Divider()
                             }
-                            .padding(20)
-                            Divider()
                         }
-                        Text(StatusManager.shared.allStatus)
+                        Button {
+                            showStatusPopup = false
+                            blurMainArea = false
+                        } label: {
+                            Text("Close")
+                        }
+                        // Text(StatusManager.shared.allStatus)
                     }
                     .background(.white)
                     .cornerRadius(15)
                     .frame(minWidth: 0, idealWidth: 750, maxWidth: 750, minHeight: 0)
                     .shadow(radius: 10)
                     .onTapGesture {
-                        print("위에")
+                        // print("위에")
                     }
                 }
                 .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height * 1.2)
                 .onTapGesture {
-                    print("오버레이 닫기")
+                    // print("오버레이 닫기")
                     showStatusPopup = false
                     blurMainArea = false
                 }
@@ -336,6 +352,8 @@ struct ContentView: View {
                     }
                 }
             }
+            
+            observeStatusNeed()
         }.onDisappear {
             print("ContentView: OnDisappear ========")
             conductor.stop()
@@ -387,6 +405,23 @@ struct ContentView: View {
             print("statusTimer is validate!")
             self.lastRecordedTime = Date()
             UserDefaults.standard.set(Date(), forKey: "STORE_lastRecordedTime")
+        }
+    }
+    
+    func observeStatusNeed() {
+        let status = StatusManager.shared
+        isNeedHappy = status.isNeedHappy
+        isNeedHealth = status.isNeedHealth
+        isNeedHygiene = status.isNeedHygiene
+        isNeedSatiety = status.isNeedSatiety
+        isNeedDiscipline = status.isNeedDiscipline
+        
+        Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+            isNeedHappy = status.isNeedHappy
+            isNeedHealth = status.isNeedHealth
+            isNeedHygiene = status.isNeedHygiene
+            isNeedSatiety = status.isNeedSatiety
+            isNeedDiscipline = status.isNeedDiscipline
         }
     }
 }

@@ -31,7 +31,7 @@ struct GradientProgressStyle<Stroke: ShapeStyle, Background: ShapeStyle>: Progre
             .cornerRadius(cornerRadius)
             .overlay(
                 RoundedRectangle(cornerRadius: cornerRadius)
-                        .stroke(stroke, lineWidth: 2)
+                        .stroke(stroke, lineWidth: 1)
             )
             
             if !caption.isEmpty {
