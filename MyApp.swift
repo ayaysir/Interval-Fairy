@@ -8,6 +8,7 @@ struct MyApp: App {
         // let trigger = true
         // if UserDefaults.standard.bool(forKey: "FIRST_RUN") || trigger {
         //     let status = StatusManager.shared
+        //     let config = ConfigManager.shared
         //     status.age = 0
         //     status.augDim = 5000
         //     status.discipline = 10000
@@ -17,7 +18,7 @@ struct MyApp: App {
         //     status.perfectness = 0
         //     status.satiety = 5000
         //     status.weight = 10000
-        //
+        //     config.fairyName = "Interval Fairy"
         // }
         print("MyApp: init ========")
         

@@ -26,6 +26,7 @@ struct ContentView: View {
     @State var lastRecordedTime: Date?
     
     @Environment(\.scenePhase) var scenePhase
+    @Environment(\.dismiss) var dismiss
     
     @State var showIntervalInfo = false
     @State var showStatusAnimation = false
@@ -42,6 +43,10 @@ struct ContentView: View {
     @State private var isNeedHappy: Bool = false
     @State private var isNeedHealth: Bool = false
     @State private var isNeedHygiene: Bool = false
+    
+    @State private var showSettingView = false
+    
+    @State var fairyName: String = "Interval Fairy"
     
     private var keyTextIndex: Int {
         if currentKeyIndex == keyList.count - 1 {
@@ -64,13 +69,15 @@ struct ContentView: View {
                         Label("View Status", systemImage: "chart.bar.fill")
                     }
                     Spacer()
+                    Text(fairyName).fontWeight(.bold)
+                    Spacer()
                     Button {
                         
                     } label: {
                         Label("Help", systemImage: "questionmark.circle.fill")
                     }
                     Button {
-                        showStatusAnimation = false
+                        showSettingView = true
                     } label: {
                         Image(systemName: "gearshape.fill")
                     }
@@ -298,6 +305,8 @@ struct ContentView: View {
                         } label: {
                             Text("Close")
                         }
+                        .buttonStyle(.borderedProminent)
+                        Spacer().frame(height: 20)
                         // Text(StatusManager.shared.allStatus)
                     }
                     .background(.white)
@@ -354,6 +363,7 @@ struct ContentView: View {
             }
             
             observeStatusNeed()
+            fairyName = ConfigManager.shared.fairyName ?? "unknown name"
         }.onDisappear {
             print("ContentView: OnDisappear ========")
             conductor.stop()
@@ -384,7 +394,12 @@ struct ContentView: View {
             showStatusTextTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: false) { _ in
                 self.showStatusAnimation = false
             }
+        }.sheet(isPresented: $showSettingView) {
+            ConfigManager.shared.fairyName = fairyName
+        } content: {
+            SettingView(fairyName: $fairyName)
         }
+
     }
     
     func initStatusTimer() {
