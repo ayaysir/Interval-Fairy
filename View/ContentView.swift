@@ -15,6 +15,7 @@ struct ContentView: View {
     
     @StateObject var starVM = StarViewModel(maxCapacity: 5)
     @StateObject var tamagotchiMovingVM = TamagotchiMovingViewModel()
+    @StateObject var tamagotchiVM = TamagotchiViewModel()
     
     @State var appeared: [Bool] = [false, false, false, false, false]
     @State var elapsedSeconds = [0, 0, 0, 0, 0]
@@ -93,8 +94,10 @@ struct ContentView: View {
                     ZStack(alignment: .bottom) {
                         // Background
                         ZStack(alignment: .topLeading) {
-                            Rectangle()
-                                .fill(.cyan)
+                            // Rectangle()
+                            //     .fill(.cyan)
+                            Image("Spring_Night")
+                                .resizable()
                             
                             // status change popover
                             if showStatusAnimation {
@@ -145,9 +148,10 @@ struct ContentView: View {
                         }
                         
                         // Tamagotchi
-                        Image("sample4")
+                        tamagotchiVM.currentImage
                             .resizable()
-                            .frame(width: 200, height: 200)
+                            .scaledToFit()
+                            .frame(width: tamagotchiVM.currentWidth)
                             .offset(tamagotchiMovingVM.offset)
                     }
                     // Stars
@@ -196,11 +200,13 @@ struct ContentView: View {
                                 }
                                 currentKeyIndex -= 1
                                 isDisplayFlat = false
+                                conductor.displayKey = keyList[keyTextIndex]
                             }
                             .buttonStyle(.borderedProminent)
                             Button {
                                 currentKeyIndex = 0
                                 isDisplayFlat = false
+                                conductor.displayKey = keyList[keyTextIndex]
                             } label: {
                                 Text("\(keyList[currentKeyIndex].textValue)")
                                     .frame(width: 80)
@@ -212,6 +218,7 @@ struct ContentView: View {
                                 }
                                 currentKeyIndex += 1
                                 isDisplayFlat = false
+                                conductor.displayKey = keyList[keyTextIndex]
                             }
                             .buttonStyle(.borderedProminent)
                         }.padding(sides: [.left, .right], value: 10)
@@ -399,7 +406,6 @@ struct ContentView: View {
         } content: {
             SettingView(fairyName: $fairyName)
         }
-
     }
     
     func initStatusTimer() {

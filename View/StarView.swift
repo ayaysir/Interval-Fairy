@@ -16,11 +16,14 @@ struct StarView: View {
     
     var body: some View {
         ZStack {
-            Image("uglystar")
+            Image("Pixel Star")
+                .resizable()
+                .frame(width: 50, height: 50)
             Text(starVM.noteName[index].noteClass.description)
+                .fontWeight(.bold)
             if starVM.isTapped[index] {
-                SwiftUIGIFPlayerView(gifName: "PoppingStar")
-                    .frame(width: 32, height: 32)
+                SwiftUIGIFPlayerView(gifName: "explosion")
+                    .frame(width: 40, height: 40)
             }
         }
         .offset(x: starVM.offsets[index].width, y: starVM.offsets[index].height)

@@ -159,8 +159,11 @@ class StatusManager {
             localStorage.set(limitValue(newValue, max: 10000), forKey: .stkAge)
         }
     }
+    var displayAge: Int {
+        age / 1000
+    }
     var ageDescription: String {
-        return "\(age / 1000) years"
+        return "\(displayAge) years"
     }
     
     var weight: Int {
@@ -278,7 +281,7 @@ class StatusManager {
         // printAllStatus()
         // * age
         //   - 1분당 8씩 증가 => 10씩 증가
-        age += Int(elapsedMinute * 10)
+        age += Int(elapsedMinute * 1000)
         
         // weight
         // 1분당 0.02% 감소
@@ -431,5 +434,20 @@ class StatusManager {
         default:
             return ""
         }
+    }
+    
+    func initializeStatus() {
+        let status = StatusManager.shared
+        let config = ConfigManager.shared
+        status.age = 0
+        status.augDim = 5000
+        status.discipline = 10000
+        status.happy = 5000
+        status.health = 10000
+        status.hygiene = 5000
+        status.perfectness = 0
+        status.satiety = 5000
+        status.weight = 10000
+        config.fairyName = "Interval Fairy"
     }
 }
