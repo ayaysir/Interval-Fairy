@@ -20,12 +20,30 @@ struct SettingView: View {
             Form {
                 Group {
                     HStack {
-                        Text("Enter Your Fairy's name:")
+                        Text("Enter Your Fairy's name:").fontWeight(.bold)
                         TextField("Fairy's Name", text: $fairyName)
                     }
-                    Button("Reset all data") {
-                        showResetAlert = true
-                    }.foregroundColor(.red)
+                    // Button("Reset all data") {
+                    //     showResetAlert = true
+                    // }.foregroundColor(.red)
+                    Text(
+                        """
+                        Licenses:
+                        
+                        * Musiqwik Font
+                        Copyright (c) 2001, 2008 by Robert Allgeyer. SIL Open Font License.
+                        
+                        * Neo둥근모 Font
+                        SIL Open Font License 1.1
+                        
+                        * AudioKit, AudioKitUI, Keyboard, SoundpipeAudioKit, Tonic
+                        MIT License
+                        https://github.com/audiokit
+                        
+                        * StableDiffusion
+                        CreativeML Open RAIL-M
+                        """
+                    )
                 }
             }
             Button("Dismiss") {

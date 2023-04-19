@@ -46,6 +46,7 @@ struct ContentView: View {
     @State private var isNeedHygiene: Bool = false
     
     @State private var showSettingView = false
+    @State private var showHelpView = false
     
     @State var fairyName: String = "Interval Fairy"
     
@@ -73,7 +74,7 @@ struct ContentView: View {
                     Text(fairyName).fontWeight(.bold)
                     Spacer()
                     Button {
-                        
+                        showHelpView = true
                     } label: {
                         Label("Help", systemImage: "questionmark.circle.fill")
                     }
@@ -238,7 +239,6 @@ struct ContentView: View {
                         .shadow(radius: 5)
                         .frame(height: UIScreen.main.bounds.height * 0.3)
                 }
-               
             }
             .blur(radius: blurMainArea ? 20 : 0)
             
@@ -334,6 +334,11 @@ struct ContentView: View {
             
         } // Root Zstack End
         .onAppear {
+            if !UserDefaults.standard.bool(forKey: .cfgIsNotFirstrun) {
+                showHelpView = true
+                UserDefaults.standard.set(true, forKey: .cfgIsNotFirstrun)
+            }
+            
             print("ContentView: OnAppear ========")
             conductor.start()
             print(Bundle.main)
@@ -405,6 +410,8 @@ struct ContentView: View {
             ConfigManager.shared.fairyName = fairyName
         } content: {
             SettingView(fairyName: $fairyName)
+        }.sheet(isPresented: $showHelpView) {
+            HelpView()
         }
     }
     

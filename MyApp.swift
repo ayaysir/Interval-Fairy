@@ -4,7 +4,8 @@ import AVFoundation
 @main
 struct MyApp: App {
     init() {
-        if UserDefaults.standard.bool(forKey: "FIRST_RUN") {
+        // UserDefaults.standard.set(true, forKey: .cfgIsNotFirstrun)
+        if !UserDefaults.standard.bool(forKey: .cfgIsNotFirstrun) {
             StatusManager.shared.initializeStatus()
         }
         
@@ -28,4 +29,5 @@ struct MyApp: App {
 
 extension String {
     static let fontDG = "NeoDunggeunmoPro-Regular"
+    static let cfgIsNotFirstrun = "CONFIG_IS_NOT_FIRSTRUN"
 }
