@@ -20,11 +20,14 @@ It was created with the purpose of making it easy and fun to learn intervals in 
 There is a type called `quality` for interval, and there are Major, minor, Perfect, Augmented, and diminished, etc.
 By inputting two notes using the embedded piano keyboard, you can make the character(fairy) happy, improve hygiene or health, or fill the satiety based on these `qualities`.
 
-### What is the app's target?
+### What is the App's Target?
 This app is aimed at anyone who wants to learn intervals easily.
 Interval is the most fundamental foundation in music theory, and the subsequent process can proceed only when the interval is learned properly.
 The later process of learning music theory can proceed only when the interval is learned properly, but the concept of interval is so complex that it is difficult to learn, which has hindered people who want to learn music theory.
 So, I developed an app to help everyone who is experiencing these difficulties, albeit in a small way.
+
+### Used Tech Stacks
+This app is mostly written using the `Swift` language and `SwiftUI`. The part related to audio and music theory used the [AudioKit](https://github.com/AudioKit), an open source library. Graphics drawn by hand or licensed AI generated illustrations used.
 
 ### Demo Video
 https://www.youtube.com/watch?v=GmwB2KxOwjs
