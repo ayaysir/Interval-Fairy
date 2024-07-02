@@ -1,6 +1,10 @@
-# Interval-Fairy
-🍏 <b><i>Apple WWDC23 Student Challenge Winner</b></i> 🏆\
+# Interval Fairy
+🍏 <b><i>Apple WWDC23 Swift Student Challenge Winner</b></i> 🏆\
 A Tamagotchi-type simulator that raises fairies through the notes of the piano keys.
+
+<!-- ![Simulator-Screenshot-iPad-Pro-12 9-inch-6th-generation-2023-05-10-at-18 44 59-복사본](https://github.com/ayaysir/Interval-Fairy/assets/40187546/7d4bd94d-7e93-4693-8740-01fdace4574b) -->
+<img src="https://github.com/ayaysir/Interval-Fairy/assets/40187546/7d4bd94d-7e93-4693-8740-01fdace4574b" width=50%>
+
 
 ## Distribution and Planning
 
